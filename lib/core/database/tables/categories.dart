@@ -8,11 +8,9 @@ class Categories extends Table {
 
   TextColumn get name => text()();
 
-  TextColumn get icon => text()();
+  TextColumn get icon => text().nullable()();
 
-  TextColumn get color => text()();
-
-  TextColumn get description => text().nullable()();
+  TextColumn get color => text().nullable()();
 
   DateTimeColumn get createdAt => dateTime().withDefault(currentDateAndTime)();
 }

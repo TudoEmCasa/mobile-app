@@ -6,15 +6,9 @@ class CategoriesRepository {
 
   CategoriesRepository(this._db);
 
-  Future<int> createCategory(
-    String name, {
-    String? description,
-    String? icon,
-    String? color,
-  }) {
+  Future<int> createCategory(String name, {String? icon, String? color}) {
     final companion = CategoriesCompanion.insert(
       name: name,
-      description: Value(description),
       icon: Value(icon),
       color: Value(color),
     );
