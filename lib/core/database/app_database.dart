@@ -5,7 +5,7 @@ import 'package:drift/native.dart';
 import 'package:path/path.dart' as p;
 import 'package:path_provider/path_provider.dart';
 
-import 'package:tudo_em_casa/core/database/tables/categories_table.dart';
+import 'package:tudo_em_casa/core/database/tables/categories.dart';
 
 part 'app_database.g.dart';
 
@@ -20,7 +20,7 @@ LazyDatabase _openConnection() {
   });
 }
 
-@DriftDatabase(tables: [CategoriesTable])
+@DriftDatabase(tables: [Categories])
 class AppDatabase extends _$AppDatabase {
   AppDatabase() : super(_openConnection());
 

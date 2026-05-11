@@ -1,6 +1,6 @@
 import 'package:drift/drift.dart';
 
-class CategoriesTable extends Table {
+class Categories extends Table {
   @override
   String get tableName => 'categories';
 
