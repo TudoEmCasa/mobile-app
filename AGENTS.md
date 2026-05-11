@@ -177,3 +177,140 @@ Not planned:
 - synchronization
 - online features
 - AI features
+
+---
+
+## Commit Convention
+
+Use Conventional Commits for all commits.
+
+Format:
+
+<type>: <short description>
+
+Examples:
+- feat: add product registration
+- fix: correct expiration date validation
+- refactor: simplify product repository
+- docs: update architecture documentation
+
+---
+
+## Allowed Commit Types
+
+### feat
+
+Use for:
+- new features
+- new screens
+- new business logic
+- new functionality
+
+Example:
+- feat: add category creation
+
+---
+
+### fix
+
+Use for:
+- bug fixes
+- incorrect behaviors
+- validation corrections
+- crashes
+
+Example:
+- fix: prevent invalid expiration date
+
+---
+
+### refactor
+
+Use for:
+- code improvements
+- internal restructuring
+- readability improvements
+- architectural cleanup
+
+Do not use for new features.
+
+Example:
+- refactor: reorganize database providers
+
+---
+
+### docs
+
+Use for:
+- documentation updates
+- markdown files
+- architecture notes
+- comments
+
+Example:
+- docs: update database structure
+
+---
+
+### style
+
+Use for:
+- formatting
+- spacing
+- lint cleanup
+- non-functional visual code changes
+
+Do not use for UI features.
+
+Example:
+- style: format product page
+
+---
+
+### chore
+
+Use for:
+- project setup
+- dependency updates
+- configuration changes
+- tooling
+- build configuration
+
+Example:
+- chore: add drift dependencies
+
+---
+
+### test
+
+Use for:
+- unit tests
+- widget tests
+- integration tests
+
+Example:
+- test: add product repository tests
+
+---
+
+## Commit Rules
+
+- Use English
+- Keep messages short and objective
+- Use lowercase commit types
+- Do not end commit messages with a period
+- Prefer one logical change per commit
+
+Avoid:
+- generic messages
+- large mixed commits
+- unclear descriptions
+
+Avoid examples:
+- update stuff
+- fixes
+- changes
+
+Prefer:
+- feat: add product list page
+- fix: correct unit selection validation
