@@ -2,10 +2,10 @@ import 'package:drift/drift.dart';
 import 'package:tudo_em_casa/core/database/app_database.dart';
 import 'package:tudo_em_casa/features/categories/data/models/index.dart';
 
-class CategoriesRepository {
+class CategoryRepository {
   final AppDatabase _db;
 
-  CategoriesRepository(this._db);
+  CategoryRepository(this._db);
 
   /// Creates a new category with the given name.
   ///
