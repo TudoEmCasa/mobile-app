@@ -166,19 +166,41 @@ Pages (UI) ←→ ViewModel ←→ Repository ←→ Database
 
 ## Data Flow Examples
 
-### Creating a Category (New Flow)
+### Creating a Category
 
 1. User taps "Create Category" button on CategoryListPage
-2. Navigation pushes CategoryFormPage
+2. Navigation pushes CategoryFormPage (no category parameter)
 3. User types name and presses "Create" button
 4. Form validates non-empty name
-5. Page reads `categoryListViewModelProvider`
-6. ViewModel calls `categoryRepositoryProvider.createCategory(name)`
-7. Repository calls `_db.into(_db.categories).insert(...)`
-8. Drift inserts category into SQLite
-9. `watchAllCategoriesProvider` emits new list
-10. CategoryListPage rebuilds with new category
-11. User navigates back from CategoryFormPage
+5. ViewModel calls `createCategory(name)`
+6. Repository inserts category into SQLite
+7. `watchAllCategoriesProvider` emits new list
+8. CategoryListPage rebuilds with new category
+9. User navigates back from CategoryFormPage
+
+### Editing a Category
+
+1. User taps edit icon on category item
+2. Navigation pushes CategoryFormPage with category parameter
+3. Form pre-fills name field with existing value
+4. User modifies name and presses "Update" button
+5. Form validates non-empty name
+6. ViewModel calls `updateCategory(category)`
+7. Repository updates category in SQLite
+8. `watchAllCategoriesProvider` emits updated list
+9. CategoryListPage rebuilds with updated category
+10. User navigates back from CategoryFormPage
+
+### Deleting a Category
+
+1. User taps delete icon on category item
+2. Confirmation dialog appears with category name
+3. User confirms deletion
+4. ViewModel calls `deleteCategory(id)`
+5. Repository deletes category from SQLite
+6. `watchAllCategoriesProvider` emits list without deleted category
+7. CategoryListPage rebuilds without the deleted item
+8. Dialog closes automatically
 
 ### Watching All Categories
 
@@ -186,25 +208,56 @@ Pages (UI) ←→ ViewModel ←→ Repository ←→ Database
 2. Provider watches `categoryRepositoryProvider.watchCategories()`
 3. Repository returns stream from `_db.select(_db.categories)...`
 4. Drift watches database table
-5. Any category change emits new list
+5. Any category change (create/update/delete) emits new list
 6. Page updates automatically
 
 ## CategoryFormPage Details
+
+### Dual Mode (Create & Edit)
+- Accepts optional `CategoryModel` parameter
+- If no category: Create mode (form title: "Create Category", button: "Create")
+- If category provided: Edit mode (form title: "Edit Category", button: "Update")
+- Pre-fills name field in edit mode
+- Same validation and submission flow for both modes
 
 ### Features
 - **Text Input**: Material 3 outlined text field with label and hint
 - **Validation**: Checks for empty/whitespace-only names
 - **Keyboard Handling**: Auto-focus on mount, submit on Enter key
 - **Loading State**: Shows progress indicator while submitting, disables controls
-- **Error Handling**: Shows SnackBar on validation or creation error
+- **Error Handling**: Shows SnackBar on validation or save error
 - **Navigation**: Back button closes page, automatic pop on success
 - **Mobile UX**: Full-page form with proper spacing (24px padding), button row at bottom
 
 ### State Management
 - Uses `ConsumerStatefulWidget` for local UI state
-- `TextEditingController` for form input
+- `TextEditingController` for form input with optional initial value
 - `FocusNode` for keyboard focus management
 - `_isSubmitting` flag to disable controls during async operation
+- `_isEditMode` getter determines form behavior
+
+## CategoryItemWidget Details
+
+### Layout
+- List tile with category name as title
+- Two icon buttons in trailing area: edit and delete
+- Explicit icons: edit (pencil), delete (trash)
+- Tooltips for accessibility
+
+### Callbacks
+- `onEdit`: Triggered when edit button pressed
+- `onDelete`: Triggered when delete button pressed
+- No hidden menus or long-press interactions
+
+## Delete Confirmation Dialog
+
+### Behavior
+- Shows when user taps delete icon
+- Displays category name in confirmation message
+- Explains action is irreversible
+- Two buttons: "Cancel" and "Delete" (red text)
+- Deletion only occurs after confirmation
+- Automatic dialog close after deletion
 
 ## Compliance Checklist
 
@@ -213,10 +266,19 @@ Pages (UI) ←→ ViewModel ←→ Repository ←→ Database
 - Pages delegate to ViewModel
 - ViewModel delegates to Repository
 - Stateful UI state in pages only (form inputs)
+- ViewModel exposes `createCategory`, `updateCategory`, `deleteCategory`
+
+✅ **CRUD Pattern**
+- **Create**: Dedicated form page with validation
+- **Read**: Reactive list page with Drift watch streams
+- **Update**: Form page pre-fills existing data, saves changes
+- **Delete**: Confirmation dialog, irreversible action warning
 
 ✅ **Navigation Pattern**
 - Dedicated page for form instead of dialogs
 - Page-based routing using Flutter Navigator
+- Edit passes category parameter to form
+- Delete uses modal confirmation dialog
 - Mobile-first full-page design
 
 ✅ **Riverpod Integration**

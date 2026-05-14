@@ -208,3 +208,113 @@ Avoid:
 - crowded forms
 - nested modals
 - complex dialog flows
+
+---
+
+# CRUD Interaction Pattern
+
+## Overview
+
+The application follows a mobile-first CRUD interaction pattern.
+
+For simple entity management screens:
+- actions should be explicit
+- interactions should minimize taps
+- primary actions should be easily discoverable
+
+---
+
+# List Item Actions
+
+List items should expose explicit actions when the number of actions is small.
+
+Preferred actions:
+- edit
+- delete
+
+Preferred UI pattern:
+
+```text
+[ Entity Information ]
+
+                [edit] [delete]
+```
+
+Avoid:
+- hidden actions
+- long press interactions
+- overflow menus for simple CRUD flows
+- swipe actions as primary interaction
+
+These approaches reduce discoverability and worsen mobile usability.
+
+---
+
+# Edit Flow
+
+Edit actions must:
+- navigate to a dedicated form page
+- prefill current entity values
+- reuse the same form structure used for creation
+
+Example:
+
+```text
+CategoryListPage
+↓
+CategoryFormPage(existingCategory)
+```
+
+---
+
+# Delete Flow
+
+Delete actions must:
+- request confirmation before deletion
+- use confirmation dialogs only for destructive actions
+
+Deletion should:
+- update lists reactively
+- avoid manual refreshes
+
+---
+
+# Confirmation Dialog Rules
+
+Dialogs are allowed only for:
+- destructive action confirmation
+- alerts
+- warnings
+
+Examples:
+- delete confirmation
+- unsaved changes warning
+
+Avoid:
+- form dialogs
+- CRUD creation modals
+- complex dialog flows
+
+---
+
+# Architecture Rules
+
+CRUD actions must respect the official architecture:
+
+UI -> ViewModel -> Repository -> Database
+
+UI must never:
+- access database directly
+- perform persistence logic directly
+
+---
+
+# Reactive Behavior
+
+Lists should update automatically using:
+- Drift watch queries
+- Riverpod reactive state
+
+Avoid:
+- manual refresh buttons
+- imperative reload logic
