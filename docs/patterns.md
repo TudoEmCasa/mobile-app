@@ -65,3 +65,30 @@ Avoid:
 - large files
 - unnecessary abstractions
 - premature optimization
+
+
+---
+
+## Providers
+
+Riverpod providers are responsible for:
+- dependency injection
+- exposing repositories
+- exposing services
+- exposing database instances
+
+Guidelines:
+- keep providers small
+- avoid business logic inside providers
+- repositories must be exposed through providers
+- UI must access dependencies through Riverpod only
+
+Naming conventions:
+- appDatabaseProvider
+- categoryRepositoryProvider
+- notificationServiceProvider
+
+Avoid:
+- direct dependency instantiation inside UI
+- global mutable state
+- manual singleton implementations

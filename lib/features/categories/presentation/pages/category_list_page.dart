@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:tudo_em_casa/features/categories/data/repositories/index.dart';
+import 'package:tudo_em_casa/features/categories/data/providers/index.dart';
+import 'package:tudo_em_casa/features/categories/presentation/viewmodels/index.dart';
 import 'package:tudo_em_casa/features/categories/presentation/widgets/index.dart';
 
 /// Page that displays a list of all categories.
@@ -92,17 +93,17 @@ class CategoryListPage extends ConsumerWidget {
                 final name = textController.text.trim();
                 if (name.isNotEmpty) {
                   try {
-                    await ref
-                        .read(categoryRepositoryProvider)
-                        .createCategory(name);
+                    final viewModel =
+                        ref.read(categoryListViewModelProvider);
+                    await viewModel.createCategory(name);
                     if (context.mounted) {
                       Navigator.of(context).pop();
                     }
                   } catch (error) {
                     if (context.mounted) {
-                      ScaffoldMessenger.of(
-                        context,
-                      ).showSnackBar(SnackBar(content: Text('Error: $error')));
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        SnackBar(content: Text('Error: $error')),
+                      );
                     }
                   }
                 }
