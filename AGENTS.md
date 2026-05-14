@@ -369,3 +369,18 @@ The project should prioritize:
 - clean structure
 
 Prefer clean code over commented code.
+
+---
+
+## Testing
+
+The project uses automated tests.
+
+Official testing guidelines:
+- docs/testing.md
+- test/AGENTS.md
+
+Tests must:
+- mirror lib/ structure
+- follow architecture rules
+- prioritize readability and maintainability
