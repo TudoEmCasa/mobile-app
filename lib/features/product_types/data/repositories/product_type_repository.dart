@@ -45,4 +45,20 @@ class ProductTypeRepository {
       }).toList();
     });
   }
+
+  Future<bool> updateProductType(ProductTypeModel productType) async {
+    final companion = ProductTypesCompanion(
+      id: Value(productType.id),
+      name: Value(productType.name),
+      categoryId: Value(productType.categoryId),
+    );
+
+    return _db.update(_db.productTypes).replace(companion);
+  }
+
+  Future<bool> deleteProductType(int id) async {
+    await (_db.delete(_db.productTypes)..where((t) => t.id.equals(id))).go();
+
+    return true;
+  }
 }

@@ -11,6 +11,16 @@ class ProductTypeListViewModel {
     final repository = _ref.read(productTypeRepositoryProvider);
     return repository.createProductType(name, categoryId);
   }
+
+  Future<bool> updateProductType(ProductTypeModel productType) {
+    final repository = _ref.read(productTypeRepositoryProvider);
+    return repository.updateProductType(productType);
+  }
+
+  Future<bool> deleteProductType(int id) {
+    final repository = _ref.read(productTypeRepositoryProvider);
+    return repository.deleteProductType(id);
+  }
 }
 
 final productTypeListViewModelProvider = Provider<ProductTypeListViewModel>((

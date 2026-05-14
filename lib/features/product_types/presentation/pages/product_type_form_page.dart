@@ -1,0 +1,190 @@
+import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:tudo_em_casa/features/categories/data/providers/index.dart';
+import 'package:tudo_em_casa/features/product_types/data/models/index.dart';
+import 'package:tudo_em_casa/features/product_types/presentation/viewmodels/index.dart';
+
+class ProductTypeFormPage extends ConsumerStatefulWidget {
+  final ProductTypeModel? productType;
+
+  const ProductTypeFormPage({super.key, this.productType});
+
+  @override
+  ConsumerState<ProductTypeFormPage> createState() =>
+      _ProductTypeFormPageState();
+}
+
+class _ProductTypeFormPageState extends ConsumerState<ProductTypeFormPage> {
+  late TextEditingController _nameController;
+  late FocusNode _nameFocus;
+  late int _selectedCategoryId;
+  bool _isSubmitting = false;
+
+  bool get _isEditMode => widget.productType != null;
+
+  @override
+  void initState() {
+    super.initState();
+    _nameController = TextEditingController(
+      text: _isEditMode ? widget.productType!.name : '',
+    );
+    _selectedCategoryId = _isEditMode ? widget.productType!.categoryId : 0;
+    _nameFocus = FocusNode();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _nameFocus.requestFocus();
+    });
+  }
+
+  @override
+  void dispose() {
+    _nameController.dispose();
+    _nameFocus.dispose();
+    super.dispose();
+  }
+
+  Future<void> _handleSave() async {
+    final name = _nameController.text.trim();
+
+    if (name.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Product type name is required')),
+      );
+      return;
+    }
+
+    if (_selectedCategoryId == 0) {
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(const SnackBar(content: Text('Category is required')));
+      return;
+    }
+
+    setState(() => _isSubmitting = true);
+
+    try {
+      final viewModel = ref.read(productTypeListViewModelProvider);
+      if (_isEditMode) {
+        final updatedProductType = widget.productType!.copyWith(
+          name: name,
+          categoryId: _selectedCategoryId,
+        );
+        await viewModel.updateProductType(updatedProductType);
+      } else {
+        await viewModel.createProductType(name, _selectedCategoryId);
+      }
+      if (mounted) {
+        Navigator.of(context).pop();
+      }
+    } catch (error) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Error saving product type: $error')),
+        );
+      }
+      setState(() => _isSubmitting = false);
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final categoriesAsync = ref.watch(watchAllCategoriesProvider);
+    final keyboardInset = MediaQuery.viewInsetsOf(context).bottom;
+
+    return Scaffold(
+      resizeToAvoidBottomInset: true,
+      appBar: AppBar(
+        title: Text(_isEditMode ? 'Edit Product Type' : 'Create Product Type'),
+      ),
+      body: categoriesAsync.when(
+        data: (categories) {
+          if (categories.isEmpty) {
+            return const Center(
+              child: Text('No categories available. Create a category first.'),
+            );
+          }
+
+          if (_selectedCategoryId == 0 && categories.isNotEmpty) {
+            _selectedCategoryId = categories.first.id;
+          }
+
+          return SafeArea(
+            child: SingleChildScrollView(
+              padding: const EdgeInsets.all(24.0),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  TextField(
+                    controller: _nameController,
+                    focusNode: _nameFocus,
+                    enabled: !_isSubmitting,
+                    decoration: InputDecoration(
+                      labelText: 'Product type name',
+                      hintText: 'e.g., Milk, Cheese',
+                      border: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                    ),
+                    textInputAction: TextInputAction.next,
+                  ),
+                  const SizedBox(height: 16),
+                  DropdownButtonFormField<int>(
+                    initialValue: _selectedCategoryId,
+                    onChanged: _isSubmitting
+                        ? null
+                        : (value) {
+                            if (value != null) {
+                              setState(() {
+                                _selectedCategoryId = value;
+                              });
+                            }
+                          },
+                    decoration: InputDecoration(
+                      labelText: 'Category',
+                      border: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                    ),
+                    items: categories
+                        .map(
+                          (category) => DropdownMenuItem<int>(
+                            value: category.id,
+                            child: Text(category.name),
+                          ),
+                        )
+                        .toList(),
+                  ),
+                ],
+              ),
+            ),
+          );
+        },
+        loading: () => const Center(child: CircularProgressIndicator()),
+        error: (error, stackTrace) =>
+            Center(child: Text('Error loading categories: $error')),
+      ),
+      bottomNavigationBar: Padding(
+        padding: EdgeInsets.only(bottom: keyboardInset),
+        child: SafeArea(
+          top: false,
+          minimum: const EdgeInsets.fromLTRB(24.0, 0, 24.0, 24.0),
+          child: SizedBox(
+            width: double.infinity,
+            child: ElevatedButton(
+              onPressed: _isSubmitting ? null : _handleSave,
+              child: _isSubmitting
+                  ? const SizedBox(
+                      height: 20,
+                      width: 20,
+                      child: CircularProgressIndicator(
+                        strokeWidth: 2,
+                        color: Colors.white,
+                      ),
+                    )
+                  : Text(_isEditMode ? 'Update' : 'Create'),
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+}

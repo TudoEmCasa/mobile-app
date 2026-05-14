@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:tudo_em_casa/features/categories/data/models/index.dart';
-import 'package:tudo_em_casa/features/categories/data/providers/index.dart';
+import 'package:tudo_em_casa/features/product_types/data/models/index.dart';
+import 'package:tudo_em_casa/features/product_types/presentation/pages/product_type_form_page.dart';
 import 'package:tudo_em_casa/features/product_types/presentation/viewmodels/index.dart';
 import 'package:tudo_em_casa/features/product_types/presentation/widgets/index.dart';
 
@@ -11,7 +11,6 @@ class ProductTypeListPage extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final productTypesAsync = ref.watch(productTypesStreamProvider);
-    final categoriesAsync = ref.watch(watchAllCategoriesProvider);
 
     return Scaffold(
       appBar: AppBar(title: const Text('Product Types')),
@@ -19,8 +18,7 @@ class ProductTypeListPage extends ConsumerWidget {
         data: (productTypes) {
           if (productTypes.isEmpty) {
             return EmptyProductTypesWidget(
-              onCreatePressed: () =>
-                  _handleCreatePressed(context, ref, categoriesAsync),
+              onCreatePressed: () => _navigateToProductTypeForm(context),
             );
           }
 
@@ -30,7 +28,9 @@ class ProductTypeListPage extends ConsumerWidget {
               final productType = productTypes[index];
               return ProductTypeItemWidget(
                 productType: productType,
-                onTap: () {},
+                onEdit: () => _navigateToProductTypeForm(context, productType),
+                onDelete: () =>
+                    _handleDeleteProductType(context, ref, productType),
               );
             },
           );
@@ -57,129 +57,61 @@ class ProductTypeListPage extends ConsumerWidget {
         ),
       ),
       floatingActionButton: FloatingActionButton(
-        onPressed: () => _handleCreatePressed(context, ref, categoriesAsync),
+        onPressed: () => _navigateToProductTypeForm(context),
         tooltip: 'Add Product Type',
         child: const Icon(Icons.add),
       ),
     );
   }
 
-  void _handleCreatePressed(
-    BuildContext context,
-    WidgetRef ref,
-    AsyncValue<List<CategoryModel>> categoriesAsync,
-  ) {
-    categoriesAsync.when(
-      data: (categories) {
-        if (categories.isEmpty) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(
-              content: Text('Create a category before adding product types.'),
-            ),
-          );
-          return;
-        }
-
-        _showCreateProductTypeDialog(context, ref, categories);
-      },
-      loading: () {
-        ScaffoldMessenger.of(
-          context,
-        ).showSnackBar(const SnackBar(content: Text('Loading categories...')));
-      },
-      error: (error, stackTrace) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Error loading categories: $error')),
-        );
-      },
+  void _navigateToProductTypeForm(
+    BuildContext context, [
+    ProductTypeModel? productType,
+  ]) {
+    Navigator.of(context).push(
+      MaterialPageRoute(
+        builder: (context) => ProductTypeFormPage(productType: productType),
+      ),
     );
   }
 
-  void _showCreateProductTypeDialog(
+  void _handleDeleteProductType(
     BuildContext context,
     WidgetRef ref,
-    List<CategoryModel> categories,
+    ProductTypeModel productType,
   ) {
-    final textController = TextEditingController();
-    var selectedCategoryId = categories.first.id;
-
     showDialog<void>(
       context: context,
       builder: (dialogContext) {
-        return StatefulBuilder(
-          builder: (context, setState) {
-            return AlertDialog(
-              title: const Text('Create Product Type'),
-              content: Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  TextField(
-                    controller: textController,
-                    decoration: const InputDecoration(
-                      hintText: 'Product type name',
-                      border: OutlineInputBorder(),
-                    ),
-                    autofocus: true,
-                  ),
-                  const SizedBox(height: 16),
-                  DropdownButtonFormField<int>(
-                    initialValue: selectedCategoryId,
-                    decoration: const InputDecoration(
-                      labelText: 'Category',
-                      border: OutlineInputBorder(),
-                    ),
-                    items: categories
-                        .map(
-                          (category) => DropdownMenuItem<int>(
-                            value: category.id,
-                            child: Text(category.name),
-                          ),
-                        )
-                        .toList(),
-                    onChanged: (value) {
-                      if (value != null) {
-                        setState(() {
-                          selectedCategoryId = value;
-                        });
-                      }
-                    },
-                  ),
-                ],
-              ),
-              actions: <Widget>[
-                TextButton(
-                  onPressed: () => Navigator.of(dialogContext).pop(),
-                  child: const Text('Cancel'),
-                ),
-                ElevatedButton(
-                  onPressed: () async {
-                    final name = textController.text.trim();
-                    if (name.isNotEmpty) {
-                      try {
-                        final viewModel = ref.read(
-                          productTypeListViewModelProvider,
-                        );
-                        await viewModel.createProductType(
-                          name,
-                          selectedCategoryId,
-                        );
-                        if (context.mounted) {
-                          Navigator.of(context).pop();
-                        }
-                      } catch (error) {
-                        if (context.mounted) {
-                          ScaffoldMessenger.of(context).showSnackBar(
-                            SnackBar(content: Text('Error: $error')),
-                          );
-                        }
-                      }
-                    }
-                  },
-                  child: const Text('Create'),
-                ),
-              ],
-            );
-          },
+        return AlertDialog(
+          title: const Text('Delete Product Type?'),
+          content: Text(
+            'Delete "${productType.name}"? This action cannot be undone.',
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.of(dialogContext).pop(),
+              child: const Text('Cancel'),
+            ),
+            TextButton(
+              onPressed: () async {
+                Navigator.of(dialogContext).pop();
+                try {
+                  final viewModel = ref.read(productTypeListViewModelProvider);
+                  await viewModel.deleteProductType(productType.id);
+                } catch (error) {
+                  if (context.mounted) {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      SnackBar(
+                        content: Text('Error deleting product type: $error'),
+                      ),
+                    );
+                  }
+                }
+              },
+              child: const Text('Delete', style: TextStyle(color: Colors.red)),
+            ),
+          ],
         );
       },
     );
