@@ -1,10 +1,6 @@
 import 'package:flutter/material.dart';
 
-/// Widget displayed when there are no categories.
-///
-/// Shows a helpful message and encourages the user to create categories.
 class EmptyCategoriesWidget extends StatelessWidget {
-  /// Callback when the FAB is pressed to create a new category.
   final VoidCallback onCreatePressed;
 
   const EmptyCategoriesWidget({super.key, required this.onCreatePressed});

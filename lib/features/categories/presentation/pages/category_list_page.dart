@@ -4,10 +4,6 @@ import 'package:tudo_em_casa/features/categories/data/providers/index.dart';
 import 'package:tudo_em_casa/features/categories/presentation/viewmodels/index.dart';
 import 'package:tudo_em_casa/features/categories/presentation/widgets/index.dart';
 
-/// Page that displays a list of all categories.
-///
-/// This page shows categories from the database in a reactive list.
-/// Users can create new categories via the floating action button.
 class CategoryListPage extends ConsumerWidget {
   const CategoryListPage({super.key});
 
@@ -29,12 +25,7 @@ class CategoryListPage extends ConsumerWidget {
             itemCount: categories.length,
             itemBuilder: (context, index) {
               final category = categories[index];
-              return CategoryItemWidget(
-                category: category,
-                onTap: () {
-                  // TODO: Navigate to category details page
-                },
-              );
+              return CategoryItemWidget(category: category, onTap: () {});
             },
           );
         },

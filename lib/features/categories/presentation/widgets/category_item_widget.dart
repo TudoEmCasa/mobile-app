@@ -1,14 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:tudo_em_casa/features/categories/data/models/index.dart';
 
-/// Widget that displays a single category item.
-///
-/// Shows the category name in a clean ListTile format.
 class CategoryItemWidget extends StatelessWidget {
-  /// The category model to display.
   final CategoryModel category;
 
-  /// Callback when the item is tapped.
   final VoidCallback? onTap;
 
   const CategoryItemWidget({super.key, required this.category, this.onTap});
