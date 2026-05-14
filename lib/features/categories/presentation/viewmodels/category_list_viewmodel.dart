@@ -12,6 +12,11 @@ class CategoryListViewModel {
     return repository.createCategory(name);
   }
 
+  Future<bool> updateCategory(CategoryModel category) {
+    final repository = _ref.read(categoryRepositoryProvider);
+    return repository.updateCategory(category);
+  }
+
   Future<bool> deleteCategory(int id) {
     final repository = _ref.read(categoryRepositoryProvider);
     return repository.deleteCategory(id);

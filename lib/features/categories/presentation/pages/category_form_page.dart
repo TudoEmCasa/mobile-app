@@ -1,9 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:tudo_em_casa/features/categories/data/models/index.dart';
 import 'package:tudo_em_casa/features/categories/presentation/viewmodels/index.dart';
 
 class CategoryFormPage extends ConsumerStatefulWidget {
-  const CategoryFormPage({super.key});
+  final CategoryModel? category;
+
+  const CategoryFormPage({super.key, this.category});
 
   @override
   ConsumerState<CategoryFormPage> createState() => _CategoryFormPageState();
@@ -14,10 +17,14 @@ class _CategoryFormPageState extends ConsumerState<CategoryFormPage> {
   late FocusNode _nameFocus;
   bool _isSubmitting = false;
 
+  bool get _isEditMode => widget.category != null;
+
   @override
   void initState() {
     super.initState();
-    _nameController = TextEditingController();
+    _nameController = TextEditingController(
+      text: _isEditMode ? widget.category!.name : '',
+    );
     _nameFocus = FocusNode();
     WidgetsBinding.instance.addPostFrameCallback((_) {
       _nameFocus.requestFocus();
@@ -45,14 +52,19 @@ class _CategoryFormPageState extends ConsumerState<CategoryFormPage> {
 
     try {
       final viewModel = ref.read(categoryListViewModelProvider);
-      await viewModel.createCategory(name);
+      if (_isEditMode) {
+        final updatedCategory = widget.category!.copyWith(name: name);
+        await viewModel.updateCategory(updatedCategory);
+      } else {
+        await viewModel.createCategory(name);
+      }
       if (mounted) {
         Navigator.of(context).pop();
       }
     } catch (error) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Error creating category: $error')),
+          SnackBar(content: Text('Error saving category: $error')),
         );
       }
       setState(() => _isSubmitting = false);
@@ -67,7 +79,7 @@ class _CategoryFormPageState extends ConsumerState<CategoryFormPage> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Create Category'),
+        title: Text(_isEditMode ? 'Edit Category' : 'Create Category'),
         leading: IconButton(
           icon: const Icon(Icons.close),
           onPressed: _isSubmitting ? null : _handleCancel,
@@ -112,7 +124,7 @@ class _CategoryFormPageState extends ConsumerState<CategoryFormPage> {
                               width: 20,
                               child: CircularProgressIndicator(strokeWidth: 2),
                             )
-                          : const Text('Create'),
+                          : Text(_isEditMode ? 'Update' : 'Create'),
                     ),
                   ),
                 ],

@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:tudo_em_casa/features/categories/data/models/index.dart';
 import 'package:tudo_em_casa/features/categories/data/providers/index.dart';
 import 'package:tudo_em_casa/features/categories/presentation/pages/category_form_page.dart';
+import 'package:tudo_em_casa/features/categories/presentation/viewmodels/index.dart';
 import 'package:tudo_em_casa/features/categories/presentation/widgets/index.dart';
 
 class CategoryListPage extends ConsumerWidget {
@@ -25,7 +27,11 @@ class CategoryListPage extends ConsumerWidget {
             itemCount: categories.length,
             itemBuilder: (context, index) {
               final category = categories[index];
-              return CategoryItemWidget(category: category, onTap: () {});
+              return CategoryItemWidget(
+                category: category,
+                onEdit: () => _navigateToCategoryForm(context, category),
+                onDelete: () => _handleDeleteCategory(context, ref, category),
+              );
             },
           );
         },
@@ -58,11 +64,49 @@ class CategoryListPage extends ConsumerWidget {
     );
   }
 
-  void _navigateToCategoryForm(BuildContext context) {
+  void _navigateToCategoryForm(BuildContext context, [CategoryModel? category]) {
     Navigator.of(context).push(
       MaterialPageRoute(
-        builder: (context) => const CategoryFormPage(),
+        builder: (context) => CategoryFormPage(category: category),
       ),
+    );
+  }
+
+  void _handleDeleteCategory(
+    BuildContext context,
+    WidgetRef ref,
+    CategoryModel category,
+  ) {
+    showDialog<void>(
+      context: context,
+      builder: (dialogContext) {
+        return AlertDialog(
+          title: const Text('Delete Category?'),
+          content: Text('Delete "${category.name}"? This action cannot be undone.'),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.of(dialogContext).pop(),
+              child: const Text('Cancel'),
+            ),
+            TextButton(
+              onPressed: () async {
+                Navigator.of(dialogContext).pop();
+                try {
+                  final viewModel = ref.read(categoryListViewModelProvider);
+                  await viewModel.deleteCategory(category.id);
+                } catch (error) {
+                  if (context.mounted) {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      SnackBar(content: Text('Error deleting category: $error')),
+                    );
+                  }
+                }
+              },
+              child: const Text('Delete', style: TextStyle(color: Colors.red)),
+            ),
+          ],
+        );
+      },
     );
   }
 }
