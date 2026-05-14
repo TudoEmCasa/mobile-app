@@ -19,11 +19,8 @@ class ProductTypeListPage extends ConsumerWidget {
         data: (productTypes) {
           if (productTypes.isEmpty) {
             return EmptyProductTypesWidget(
-              onCreatePressed: () => _handleCreatePressed(
-                context,
-                ref,
-                categoriesAsync,
-              ),
+              onCreatePressed: () =>
+                  _handleCreatePressed(context, ref, categoriesAsync),
             );
           }
 
@@ -86,9 +83,9 @@ class ProductTypeListPage extends ConsumerWidget {
         _showCreateProductTypeDialog(context, ref, categories);
       },
       loading: () {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Loading categories...')),
-        );
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(const SnackBar(content: Text('Loading categories...')));
       },
       error: (error, stackTrace) {
         ScaffoldMessenger.of(context).showSnackBar(
@@ -159,8 +156,9 @@ class ProductTypeListPage extends ConsumerWidget {
                     final name = textController.text.trim();
                     if (name.isNotEmpty) {
                       try {
-                        final viewModel =
-                            ref.read(productTypeListViewModelProvider);
+                        final viewModel = ref.read(
+                          productTypeListViewModelProvider,
+                        );
                         await viewModel.createProductType(
                           name,
                           selectedCategoryId,

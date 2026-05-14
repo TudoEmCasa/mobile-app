@@ -17,17 +17,18 @@ class ProductTypeRepository {
   }
 
   Stream<List<ProductTypeWithCategoryModel>> watchProductTypes() {
-    final query = _db.select(_db.productTypes).join([
-      innerJoin(
-        _db.categories,
-        _db.categories.id.equalsExp(_db.productTypes.categoryId),
-      ),
-    ])..orderBy([
-        OrderingTerm(
-          expression: _db.productTypes.name,
-          mode: OrderingMode.asc,
-        ),
-      ]);
+    final query =
+        _db.select(_db.productTypes).join([
+          innerJoin(
+            _db.categories,
+            _db.categories.id.equalsExp(_db.productTypes.categoryId),
+          ),
+        ])..orderBy([
+          OrderingTerm(
+            expression: _db.productTypes.name,
+            mode: OrderingMode.asc,
+          ),
+        ]);
 
     return query.watch().map((rows) {
       return rows.map((row) {

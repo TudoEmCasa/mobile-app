@@ -13,22 +13,25 @@ class ProductTypeListViewModel {
   }
 }
 
-final productTypeListViewModelProvider =
-    Provider<ProductTypeListViewModel>((ref) {
+final productTypeListViewModelProvider = Provider<ProductTypeListViewModel>((
+  ref,
+) {
   return ProductTypeListViewModel(ref);
 });
 
 final productTypesStreamProvider =
     StreamProvider<List<ProductTypeWithCategoryModel>>((ref) {
-  return ref.watch(watchAllProductTypesProvider).when(
-    data: (productTypes) async* {
-      yield productTypes;
-    },
-    loading: () async* {
-      yield const [];
-    },
-    error: (error, stackTrace) {
-      throw error;
-    },
-  );
-});
+      return ref
+          .watch(watchAllProductTypesProvider)
+          .when(
+            data: (productTypes) async* {
+              yield productTypes;
+            },
+            loading: () async* {
+              yield const [];
+            },
+            error: (error, stackTrace) {
+              throw error;
+            },
+          );
+    });

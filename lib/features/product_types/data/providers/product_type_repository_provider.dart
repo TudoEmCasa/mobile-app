@@ -10,6 +10,6 @@ final productTypeRepositoryProvider = Provider<ProductTypeRepository>((ref) {
 
 final watchAllProductTypesProvider =
     StreamProvider<List<ProductTypeWithCategoryModel>>((ref) {
-  final repository = ref.watch(productTypeRepositoryProvider);
-  return repository.watchProductTypes();
-});
+      final repository = ref.watch(productTypeRepositoryProvider);
+      return repository.watchProductTypes();
+    });
