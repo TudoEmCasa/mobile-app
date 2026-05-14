@@ -384,3 +384,20 @@ Tests must:
 - mirror lib/ structure
 - follow architecture rules
 - prioritize readability and maintainability
+
+---
+
+## Relational Modeling
+
+Prefer relational entities with optional related objects.
+
+Example:
+
+```dart
+final CategoryModel? category;
+```
+
+Avoid:
+- duplicated relational models
+- flattened relationship fields
+- relationship-specific entity variants

@@ -318,3 +318,119 @@ Lists should update automatically using:
 Avoid:
 - manual refresh buttons
 - imperative reload logic
+
+---
+
+# Relational Model Pattern
+
+## Overview
+
+The project follows a relational entity modeling strategy.
+
+Entities should support optional relational objects instead of creating duplicated relational models.
+
+---
+
+# Preferred Approach
+
+Prefer:
+
+```dart
+class ProductTypeModel {
+  final int id;
+  final String name;
+  final int categoryId;
+  final CategoryModel? category;
+}
+```
+
+Instead of:
+
+```dart
+ProductTypeModel
+ProductTypeWithCategoryModel
+```
+
+---
+
+# Goals
+
+This approach improves:
+- scalability
+- maintainability
+- consistency
+- relational modeling quality
+- type safety
+
+---
+
+# Relationship Rules
+
+Relationships should:
+- be optional
+- support nullable relational loading
+- support queries with and without joins
+
+Example:
+
+```dart
+final CategoryModel? category;
+```
+
+---
+
+# Avoid
+
+Avoid:
+- duplicated entity models
+- flattened relationship fields
+- relationship-specific entity variants
+
+Examples to avoid:
+
+```dart
+ProductTypeWithCategoryModel
+ProductWithCategoryModel
+ProductWithUnitModel
+```
+
+Also avoid:
+
+```dart
+categoryName
+unitName
+productTypeName
+```
+
+inside unrelated entities.
+
+---
+
+# Preferred Access Pattern
+
+Prefer:
+
+```dart
+productType.category?.name
+```
+
+Instead of:
+
+```dart
+productType.categoryName
+```
+
+---
+
+# Repository Rules
+
+Repositories should:
+- map joins into relational objects
+- populate optional relationships when necessary
+- keep entities consistent across all query types
+
+---
+
+# Scalability Goals
+
+This pattern must be used across the entire project to support future relational growth while avoiding duplicated models and maintenance complexity.
