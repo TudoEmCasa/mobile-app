@@ -71,22 +71,17 @@ class _CategoryFormPageState extends ConsumerState<CategoryFormPage> {
     }
   }
 
-  void _handleCancel() {
-    Navigator.of(context).pop();
-  }
-
   @override
   Widget build(BuildContext context) {
+    final keyboardInset = MediaQuery.viewInsetsOf(context).bottom;
+
     return Scaffold(
+      resizeToAvoidBottomInset: true,
       appBar: AppBar(
         title: Text(_isEditMode ? 'Edit Category' : 'Create Category'),
-        leading: IconButton(
-          icon: const Icon(Icons.close),
-          onPressed: _isSubmitting ? null : _handleCancel,
-        ),
       ),
-      body: SingleChildScrollView(
-        child: Padding(
+      body: SafeArea(
+        child: SingleChildScrollView(
           padding: const EdgeInsets.all(24.0),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -105,31 +100,30 @@ class _CategoryFormPageState extends ConsumerState<CategoryFormPage> {
                 textInputAction: TextInputAction.done,
                 onSubmitted: (_) => _isSubmitting ? null : _handleSave(),
               ),
-              const SizedBox(height: 32),
-              Row(
-                children: [
-                  Expanded(
-                    child: OutlinedButton(
-                      onPressed: _isSubmitting ? null : _handleCancel,
-                      child: const Text('Cancel'),
-                    ),
-                  ),
-                  const SizedBox(width: 12),
-                  Expanded(
-                    child: ElevatedButton(
-                      onPressed: _isSubmitting ? null : _handleSave,
-                      child: _isSubmitting
-                          ? const SizedBox(
-                              height: 20,
-                              width: 20,
-                              child: CircularProgressIndicator(strokeWidth: 2),
-                            )
-                          : Text(_isEditMode ? 'Update' : 'Create'),
-                    ),
-                  ),
-                ],
-              ),
             ],
+          ),
+        ),
+      ),
+      bottomNavigationBar: Padding(
+        padding: EdgeInsets.only(bottom: keyboardInset),
+        child: SafeArea(
+          top: false,
+          minimum: const EdgeInsets.fromLTRB(24.0, 0, 24.0, 24.0),
+          child: SizedBox(
+            width: double.infinity,
+            child: ElevatedButton(
+              onPressed: _isSubmitting ? null : _handleSave,
+              child: _isSubmitting
+                  ? const SizedBox(
+                      height: 20,
+                      width: 20,
+                      child: CircularProgressIndicator(
+                        strokeWidth: 2,
+                        color: Colors.white,
+                      ),
+                    )
+                  : Text(_isEditMode ? 'Update' : 'Create'),
+            ),
           ),
         ),
       ),
