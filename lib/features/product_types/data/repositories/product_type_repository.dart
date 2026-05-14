@@ -1,5 +1,6 @@
 import 'package:drift/drift.dart';
 import 'package:tudo_em_casa/core/database/app_database.dart';
+import 'package:tudo_em_casa/features/categories/data/models/category_model.dart';
 import 'package:tudo_em_casa/features/product_types/data/models/index.dart';
 
 class ProductTypeRepository {
@@ -16,7 +17,7 @@ class ProductTypeRepository {
     return _db.into(_db.productTypes).insert(companion);
   }
 
-  Stream<List<ProductTypeWithCategoryModel>> watchProductTypes() {
+  Stream<List<ProductTypeModel>> watchProductTypes() {
     final query =
         _db.select(_db.productTypes).join([
           innerJoin(
@@ -35,11 +36,11 @@ class ProductTypeRepository {
         final productType = row.readTable(_db.productTypes);
         final category = row.readTable(_db.categories);
 
-        return ProductTypeWithCategoryModel(
+        return ProductTypeModel(
           id: productType.id,
           name: productType.name,
           categoryId: productType.categoryId,
-          categoryName: category.name,
+          category: CategoryModel.fromDrift(category),
         );
       }).toList();
     });

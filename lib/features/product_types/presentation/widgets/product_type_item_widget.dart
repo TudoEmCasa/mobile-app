@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:tudo_em_casa/features/product_types/data/models/index.dart';
 
 class ProductTypeItemWidget extends StatelessWidget {
-  final ProductTypeWithCategoryModel productType;
+  final ProductTypeModel productType;
 
   final VoidCallback? onTap;
 
@@ -16,7 +16,7 @@ class ProductTypeItemWidget extends StatelessWidget {
   Widget build(BuildContext context) {
     return ListTile(
       title: Text(productType.name),
-      subtitle: Text('Category: ${productType.categoryName}'),
+      subtitle: Text('Category: ${productType.category?.name ?? 'Unknown'}'),
       onTap: onTap,
       trailing: const Icon(Icons.arrow_forward_ios, size: 16),
     );

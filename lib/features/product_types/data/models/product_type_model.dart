@@ -1,22 +1,30 @@
 import 'package:drift/drift.dart';
 import 'package:tudo_em_casa/core/database/app_database.dart';
+import 'package:tudo_em_casa/features/categories/data/models/category_model.dart';
 
 class ProductTypeModel {
   final int id;
   final String name;
   final int categoryId;
+  final CategoryModel? category;
 
   ProductTypeModel({
     required this.id,
     required this.name,
     required this.categoryId,
+    this.category,
   });
 
   factory ProductTypeModel.create({
     required String name,
     required int categoryId,
   }) {
-    return ProductTypeModel(id: 0, name: name, categoryId: categoryId);
+    return ProductTypeModel(
+      id: 0,
+      name: name,
+      categoryId: categoryId,
+      category: null,
+    );
   }
 
   factory ProductTypeModel.fromDrift(ProductType productType) {
@@ -35,11 +43,17 @@ class ProductTypeModel {
     );
   }
 
-  ProductTypeModel copyWith({int? id, String? name, int? categoryId}) {
+  ProductTypeModel copyWith({
+    int? id,
+    String? name,
+    int? categoryId,
+    CategoryModel? category,
+  }) {
     return ProductTypeModel(
       id: id ?? this.id,
       name: name ?? this.name,
       categoryId: categoryId ?? this.categoryId,
+      category: category ?? this.category,
     );
   }
 
@@ -50,12 +64,17 @@ class ProductTypeModel {
           runtimeType == other.runtimeType &&
           id == other.id &&
           name == other.name &&
-          categoryId == other.categoryId;
+          categoryId == other.categoryId &&
+          category == other.category;
 
   @override
-  int get hashCode => id.hashCode ^ name.hashCode ^ categoryId.hashCode;
+  int get hashCode =>
+      id.hashCode ^
+      name.hashCode ^
+      categoryId.hashCode ^
+      (category?.hashCode ?? 0);
 
   @override
   String toString() =>
-      'ProductTypeModel(id: $id, name: $name, categoryId: $categoryId)';
+      'ProductTypeModel(id: $id, name: $name, categoryId: $categoryId, category: $category)';
 }
