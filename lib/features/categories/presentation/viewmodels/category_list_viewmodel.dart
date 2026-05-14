@@ -39,15 +39,17 @@ final categoryListViewModelProvider = Provider<CategoryListViewModel>((ref) {
 ///
 /// This is exposed at the ViewModel level for the UI layer to consume.
 final categoriesStreamProvider = StreamProvider<List<CategoryModel>>((ref) {
-  return ref.watch(watchAllCategoriesProvider).when(
-    data: (categories) async* {
-      yield categories;
-    },
-    loading: () async* {
-      yield const [];
-    },
-    error: (error, stackTrace) {
-      throw error;
-    },
-  );
+  return ref
+      .watch(watchAllCategoriesProvider)
+      .when(
+        data: (categories) async* {
+          yield categories;
+        },
+        loading: () async* {
+          yield const [];
+        },
+        error: (error, stackTrace) {
+          throw error;
+        },
+      );
 });

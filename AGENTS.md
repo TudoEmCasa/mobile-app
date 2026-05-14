@@ -314,3 +314,58 @@ Avoid examples:
 Prefer:
 - feat: add product list page
 - fix: correct unit selection validation
+
+---
+
+## Comments Guidelines
+
+Prefer self-explanatory code over excessive comments.
+
+Code should be understandable through:
+- explicit naming
+- small methods
+- small widgets
+- clear responsibilities
+- clean architecture
+
+Avoid:
+- redundant comments
+- obvious comments
+- line-by-line explanations
+- comments that describe what the code is already clearly expressing
+
+Bad examples:
+
+```dart
+// Create category
+final category = Category();
+```
+
+```dart
+// Return categories list
+return categories;
+```
+
+Prefer:
+
+```dart
+final category = Category();
+```
+
+```dart
+return categories;
+```
+
+Comments are allowed only for:
+- complex business rules
+- important architectural decisions
+- technical limitations
+- temporary workarounds with clear justification
+
+The project should prioritize:
+- readability
+- maintainability
+- explicit naming
+- clean structure
+
+Prefer clean code over commented code.

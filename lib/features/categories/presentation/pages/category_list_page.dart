@@ -93,17 +93,16 @@ class CategoryListPage extends ConsumerWidget {
                 final name = textController.text.trim();
                 if (name.isNotEmpty) {
                   try {
-                    final viewModel =
-                        ref.read(categoryListViewModelProvider);
+                    final viewModel = ref.read(categoryListViewModelProvider);
                     await viewModel.createCategory(name);
                     if (context.mounted) {
                       Navigator.of(context).pop();
                     }
                   } catch (error) {
                     if (context.mounted) {
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        SnackBar(content: Text('Error: $error')),
-                      );
+                      ScaffoldMessenger.of(
+                        context,
+                      ).showSnackBar(SnackBar(content: Text('Error: $error')));
                     }
                   }
                 }
