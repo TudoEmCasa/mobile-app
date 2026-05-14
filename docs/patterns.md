@@ -92,3 +92,119 @@ Avoid:
 - direct dependency instantiation inside UI
 - global mutable state
 - manual singleton implementations
+
+---
+
+# Form Navigation Pattern
+
+## Overview
+
+The application follows a mobile-first navigation approach.
+
+Creation and editing flows must use dedicated pages instead of dialogs or modal-based forms.
+
+This improves:
+- mobile usability
+- keyboard handling
+- scalability
+- accessibility
+- future maintainability
+
+---
+
+# Preferred Pattern
+
+Use:
+
+```text
+List Page
+↓
+Push Navigation
+↓
+Form Page
+```
+
+Examples:
+
+```text
+CategoryListPage
+↓
+CategoryFormPage
+```
+
+```text
+ProductTypeListPage
+↓
+ProductTypeFormPage
+```
+
+---
+
+# Form Page Responsibilities
+
+Dedicated form pages should:
+- handle creation flows
+- support future editing flows
+- contain validation logic
+- provide proper spacing
+- support mobile keyboard behavior
+
+---
+
+# Avoid
+
+Avoid using:
+- dialogs for forms
+- modal bottom sheets for forms
+- inline form expansion inside lists
+
+These patterns are discouraged because they:
+- reduce usability on mobile
+- complicate validation flows
+- limit scalability
+- worsen keyboard handling
+
+---
+
+# Allowed Modal Usage
+
+Dialogs/modals are allowed only for:
+- confirmations
+- alerts
+- destructive action confirmation
+- simple informational messages
+
+Examples:
+- delete confirmation
+- unsaved changes warning
+- error alerts
+
+---
+
+# Architecture Rules
+
+Form pages must:
+- use ViewModels/providers
+- avoid direct database access
+- avoid direct repository access
+
+Forms should remain:
+- simple
+- reusable
+- maintainable
+- mobile-friendly
+
+---
+
+# UI Guidelines
+
+Prefer:
+- dedicated pages
+- clear actions
+- explicit save/cancel actions
+- clean Material 3 layouts
+
+Avoid:
+- crowded forms
+- nested modals
+- complex dialog flows
