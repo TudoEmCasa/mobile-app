@@ -8,19 +8,20 @@ lib/features/categories/
 │   ├── models/
 │   │   ├── category_model.dart
 │   │   └── index.dart
-│   ├── providers/                    ← NEW: Provider layer
+│   ├── providers/                    ← Provider layer
 │   │   ├── category_repository_provider.dart
 │   │   └── index.dart
 │   ├── repositories/
-│   │   ├── category_repository.dart  (clean, no providers)
+│   │   ├── category_repository.dart
 │   │   └── index.dart
 │   └── ...
 ├── presentation/
 │   ├── pages/
-│   │   ├── category_list_page.dart   (updated: uses ViewModel)
+│   │   ├── category_list_page.dart   (list & navigation)
+│   │   ├── category_form_page.dart   (form - create/edit)
 │   │   └── index.dart
 │   ├── viewmodels/
-│   │   ├── category_list_viewmodel.dart (refactored: proper MVVM)
+│   │   ├── category_list_viewmodel.dart
 │   │   └── index.dart
 │   ├── widgets/
 │   │   ├── category_item_widget.dart
@@ -39,8 +40,21 @@ lib/features/categories/
 │  ┌──────────────────────────────────────────────────────────┐  │
 │  │  CategoryListPage (ConsumerWidget)                       │  │
 │  │  • Watches watchAllCategoriesProvider for data           │  │
-│  │  • Reads categoryListViewModelProvider for actions       │  │
-│  │  • Renders UI                                            │  │
+│  │  • Navigates to CategoryFormPage on create              │  │
+│  │  • Renders category list                                │  │
+│  └──────────────────────────────────────────────────────────┘  │
+│                           │                                     │
+│                   navigates to / returns                        │
+│                           │                                     │
+│  ┌──────────────────────────▼──────────────────────────────┐  │
+│  │  CategoryFormPage (ConsumerStatefulWidget)              │  │
+│  │  • Text field for category name                         │  │
+│  │  • Form validation (required field check)               │  │
+│  │  • Save & Cancel buttons                                │  │
+│  │  • Calls ViewModel to persist                           │  │
+│  │  • Auto-focuses on text field                           │  │
+│  │  • Handles keyboard properly                            │  │
+│  │  • Disables actions while submitting                    │  │
 │  └──────────────────────────────────────────────────────────┘  │
 └──────────────────────────┬──────────────────────────────────────┘
                            │ consumes providers
@@ -118,43 +132,53 @@ lib/features/categories/
 ## Key Principles Applied
 
 ### 1. **Separation of Concerns**
-- UI only handles presentation
-- ViewModel handles business logic
+- UI only handles presentation and navigation
+- ViewModel handles business logic and form orchestration
 - Repository handles data persistence
 - Providers handle dependency injection
 
-### 2. **Dependency Injection via Riverpod**
+### 2. **Page-Based Navigation Pattern**
+- `CategoryListPage` — displays list of categories, navigation entry point
+- `CategoryFormPage` — dedicated form page for category creation
+- No dialogs/modals for content creation
+- Mobile-first approach with full-screen form
+
+### 3. **Dependency Injection via Riverpod**
 - AppDatabase injected into Repository via `appDatabaseProvider`
 - Repository injected into ViewModel via `categoryRepositoryProvider`
 - Single instance pattern ensures consistency
 
-### 3. **Reactive Programming**
+### 4. **Reactive Programming**
 - `watchAllCategoriesProvider` provides reactive stream
 - UI rebuilds when categories change
 - Powered by Drift's reactive watch() API
 
-### 4. **Type Safety**
+### 5. **Type Safety**
 - Full Dart type system usage
 - Drift provides SQL type safety
 - No raw SQL queries
 
-### 5. **MVVM Pattern**
+### 6. **MVVM Pattern**
 ```
-View (UI) ←→ ViewModel ←→ Repository ←→ Database
-  (passive)    (logic)   (persistence)  (data)
+Pages (UI) ←→ ViewModel ←→ Repository ←→ Database
+ (passive)    (logic)   (persistence)  (data)
 ```
 
 ## Data Flow Examples
 
-### Creating a Category
+### Creating a Category (New Flow)
 
-1. User types name and presses "Create"
-2. Page calls `viewModel.createCategory(name)`
-3. ViewModel reads `categoryRepositoryProvider`
-4. Repository calls `_db.into(_db.categories).insert(...)`
-5. Drift creates category in SQLite
-6. `watchAllCategoriesProvider` emits new list
-7. Page rebuilds with new category
+1. User taps "Create Category" button on CategoryListPage
+2. Navigation pushes CategoryFormPage
+3. User types name and presses "Create" button
+4. Form validates non-empty name
+5. Page reads `categoryListViewModelProvider`
+6. ViewModel calls `categoryRepositoryProvider.createCategory(name)`
+7. Repository calls `_db.into(_db.categories).insert(...)`
+8. Drift inserts category into SQLite
+9. `watchAllCategoriesProvider` emits new list
+10. CategoryListPage rebuilds with new category
+11. User navigates back from CategoryFormPage
 
 ### Watching All Categories
 
@@ -165,12 +189,35 @@ View (UI) ←→ ViewModel ←→ Repository ←→ Database
 5. Any category change emits new list
 6. Page updates automatically
 
+## CategoryFormPage Details
+
+### Features
+- **Text Input**: Material 3 outlined text field with label and hint
+- **Validation**: Checks for empty/whitespace-only names
+- **Keyboard Handling**: Auto-focus on mount, submit on Enter key
+- **Loading State**: Shows progress indicator while submitting, disables controls
+- **Error Handling**: Shows SnackBar on validation or creation error
+- **Navigation**: Back button closes page, automatic pop on success
+- **Mobile UX**: Full-page form with proper spacing (24px padding), button row at bottom
+
+### State Management
+- Uses `ConsumerStatefulWidget` for local UI state
+- `TextEditingController` for form input
+- `FocusNode` for keyboard focus management
+- `_isSubmitting` flag to disable controls during async operation
+
 ## Compliance Checklist
 
 ✅ **MVVM Architecture**
 - Clear separation between UI, ViewModel, Repository, Database
-- UI delegates to ViewModel
+- Pages delegate to ViewModel
 - ViewModel delegates to Repository
+- Stateful UI state in pages only (form inputs)
+
+✅ **Navigation Pattern**
+- Dedicated page for form instead of dialogs
+- Page-based routing using Flutter Navigator
+- Mobile-first full-page design
 
 ✅ **Riverpod Integration**
 - Provider pattern for dependency injection
@@ -197,3 +244,11 @@ View (UI) ←→ ViewModel ←→ Repository ←→ Database
 - Consistent naming
 - Well-documented
 - Production-ready
+
+## Future Extensibility
+
+The current architecture supports:
+- **Category Editing**: Pass optional category parameter to `CategoryFormPage`
+- **Pre-fill Values**: Update `_nameController` with existing category data
+- **Update Flow**: Add `updateCategory` method to ViewModel
+- **Batch Operations**: Add repository methods for bulk create/update/delete

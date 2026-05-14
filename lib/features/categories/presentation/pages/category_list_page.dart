@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:tudo_em_casa/features/categories/data/providers/index.dart';
-import 'package:tudo_em_casa/features/categories/presentation/viewmodels/index.dart';
+import 'package:tudo_em_casa/features/categories/presentation/pages/category_form_page.dart';
 import 'package:tudo_em_casa/features/categories/presentation/widgets/index.dart';
 
 class CategoryListPage extends ConsumerWidget {
@@ -17,7 +17,7 @@ class CategoryListPage extends ConsumerWidget {
         data: (categories) {
           if (categories.isEmpty) {
             return EmptyCategoriesWidget(
-              onCreatePressed: () => _showCreateCategoryDialog(context, ref),
+              onCreatePressed: () => _navigateToCategoryForm(context),
             );
           }
 
@@ -51,58 +51,18 @@ class CategoryListPage extends ConsumerWidget {
         ),
       ),
       floatingActionButton: FloatingActionButton(
-        onPressed: () => _showCreateCategoryDialog(context, ref),
+        onPressed: () => _navigateToCategoryForm(context),
         tooltip: 'Add Category',
         child: const Icon(Icons.add),
       ),
     );
   }
 
-  void _showCreateCategoryDialog(BuildContext context, WidgetRef ref) {
-    final textController = TextEditingController();
-
-    showDialog<void>(
-      context: context,
-      builder: (dialogContext) {
-        return AlertDialog(
-          title: const Text('Create Category'),
-          content: TextField(
-            controller: textController,
-            decoration: const InputDecoration(
-              hintText: 'Category name',
-              border: OutlineInputBorder(),
-            ),
-            autofocus: true,
-          ),
-          actions: <Widget>[
-            TextButton(
-              onPressed: () => Navigator.of(dialogContext).pop(),
-              child: const Text('Cancel'),
-            ),
-            ElevatedButton(
-              onPressed: () async {
-                final name = textController.text.trim();
-                if (name.isNotEmpty) {
-                  try {
-                    final viewModel = ref.read(categoryListViewModelProvider);
-                    await viewModel.createCategory(name);
-                    if (context.mounted) {
-                      Navigator.of(context).pop();
-                    }
-                  } catch (error) {
-                    if (context.mounted) {
-                      ScaffoldMessenger.of(
-                        context,
-                      ).showSnackBar(SnackBar(content: Text('Error: $error')));
-                    }
-                  }
-                }
-              },
-              child: const Text('Create'),
-            ),
-          ],
-        );
-      },
+  void _navigateToCategoryForm(BuildContext context) {
+    Navigator.of(context).push(
+      MaterialPageRoute(
+        builder: (context) => const CategoryFormPage(),
+      ),
     );
   }
 }
