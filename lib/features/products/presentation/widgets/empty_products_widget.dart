@@ -15,11 +15,20 @@ class EmptyProductsWidget extends StatelessWidget {
           children: [
             Icon(Icons.inbox, size: 64, color: Colors.grey.shade400),
             const SizedBox(height: 16),
-            Text('No products yet', style: Theme.of(context).textTheme.titleLarge),
+            Text(
+              'No products yet',
+              style: Theme.of(context).textTheme.titleLarge,
+            ),
             const SizedBox(height: 8),
-            Text('Add your first product to start tracking your stock.', textAlign: TextAlign.center),
+            Text(
+              'Add your first product to start tracking your stock.',
+              textAlign: TextAlign.center,
+            ),
             const SizedBox(height: 16),
-            ElevatedButton(onPressed: onCreatePressed, child: const Text('Create Product')),
+            ElevatedButton(
+              onPressed: onCreatePressed,
+              child: const Text('Create Product'),
+            ),
           ],
         ),
       ),

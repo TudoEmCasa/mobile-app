@@ -18,7 +18,11 @@ class ProductRepository {
     DateTime? expirationDate,
   }) {
     final normalizedExpiration = expirationDate != null
-        ? DateTime(expirationDate.year, expirationDate.month, expirationDate.day)
+        ? DateTime(
+            expirationDate.year,
+            expirationDate.month,
+            expirationDate.day,
+          )
         : null;
 
     final companion = ProductsCompanion.insert(
@@ -35,8 +39,14 @@ class ProductRepository {
 
   Future<ProductModel?> getProductById(int id) async {
     final query = _db.select(_db.products).join([
-      innerJoin(_db.productTypes, _db.productTypes.id.equalsExp(_db.products.productTypeId)),
-      innerJoin(_db.categories, _db.categories.id.equalsExp(_db.productTypes.categoryId)),
+      innerJoin(
+        _db.productTypes,
+        _db.productTypes.id.equalsExp(_db.products.productTypeId),
+      ),
+      innerJoin(
+        _db.categories,
+        _db.categories.id.equalsExp(_db.productTypes.categoryId),
+      ),
       innerJoin(_db.units, _db.units.id.equalsExp(_db.products.unitId)),
     ])..where(_db.products.id.equals(id));
 
@@ -75,11 +85,17 @@ class ProductRepository {
 
       final product = products.first;
 
-      final productTypeRow = await (_db.select(_db.productTypes)..where((t) => t.id.equals(product.productTypeId))).getSingleOrNull();
+      final productTypeRow = await (_db.select(
+        _db.productTypes,
+      )..where((t) => t.id.equals(product.productTypeId))).getSingleOrNull();
       final categoryRow = productTypeRow != null
-          ? await (_db.select(_db.categories)..where((t) => t.id.equals(productTypeRow.categoryId))).getSingleOrNull()
+          ? await (_db.select(_db.categories)
+                  ..where((t) => t.id.equals(productTypeRow.categoryId)))
+                .getSingleOrNull()
           : null;
-      final unitRow = await (_db.select(_db.units)..where((t) => t.id.equals(product.unitId))).getSingleOrNull();
+      final unitRow = await (_db.select(
+        _db.units,
+      )..where((t) => t.id.equals(product.unitId))).getSingleOrNull();
 
       return ProductModel(
         id: product.id,
@@ -94,7 +110,9 @@ class ProductRepository {
                 id: productTypeRow.id,
                 name: productTypeRow.name,
                 categoryId: productTypeRow.categoryId,
-                category: categoryRow != null ? CategoryModel.fromDrift(categoryRow) : null,
+                category: categoryRow != null
+                    ? CategoryModel.fromDrift(categoryRow)
+                    : null,
               )
             : null,
         unit: unitRow != null ? UnitModel.fromDrift(unitRow) : null,
@@ -103,13 +121,20 @@ class ProductRepository {
   }
 
   Stream<List<ProductModel>> watchProducts() {
-    final query = _db.select(_db.products).join([
-      leftOuterJoin(_db.productTypes, _db.productTypes.id.equalsExp(_db.products.productTypeId)),
-      leftOuterJoin(_db.categories, _db.categories.id.equalsExp(_db.productTypes.categoryId)),
-      leftOuterJoin(_db.units, _db.units.id.equalsExp(_db.products.unitId)),
-    ])..orderBy([
-        OrderingTerm(expression: _db.products.name, mode: OrderingMode.asc),
-    ]);
+    final query =
+        _db.select(_db.products).join([
+          leftOuterJoin(
+            _db.productTypes,
+            _db.productTypes.id.equalsExp(_db.products.productTypeId),
+          ),
+          leftOuterJoin(
+            _db.categories,
+            _db.categories.id.equalsExp(_db.productTypes.categoryId),
+          ),
+          leftOuterJoin(_db.units, _db.units.id.equalsExp(_db.products.unitId)),
+        ])..orderBy([
+          OrderingTerm(expression: _db.products.name, mode: OrderingMode.asc),
+        ]);
 
     return query.watch().map((rows) {
       return rows.map((row) {
@@ -131,7 +156,9 @@ class ProductRepository {
                   id: productType.id,
                   name: productType.name,
                   categoryId: productType.categoryId,
-                  category: category != null ? CategoryModel.fromDrift(category) : null,
+                  category: category != null
+                      ? CategoryModel.fromDrift(category)
+                      : null,
                 )
               : null,
           unit: unit != null ? UnitModel.fromDrift(unit) : null,

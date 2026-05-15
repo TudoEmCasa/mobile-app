@@ -27,8 +27,12 @@ class _ProductFormPageState extends ConsumerState<ProductFormPage> {
   @override
   void initState() {
     super.initState();
-    _nameController = TextEditingController(text: _isEditMode ? widget.product!.name : '');
-    _quantityController = TextEditingController(text: _isEditMode ? widget.product!.quantity.toString() : '0');
+    _nameController = TextEditingController(
+      text: _isEditMode ? widget.product!.name : '',
+    );
+    _quantityController = TextEditingController(
+      text: _isEditMode ? widget.product!.quantity.toString() : '0',
+    );
     _selectedProductTypeId = _isEditMode ? widget.product!.productTypeId : null;
     _selectedUnitId = _isEditMode ? widget.product!.unitId : null;
     _expirationDate = _isEditMode ? widget.product!.expirationDate : null;
@@ -52,7 +56,9 @@ class _ProductFormPageState extends ConsumerState<ProductFormPage> {
     );
 
     if (picked != null) {
-      setState(() => _expirationDate = DateTime(picked.year, picked.month, picked.day));
+      setState(
+        () => _expirationDate = DateTime(picked.year, picked.month, picked.day),
+      );
     }
   }
 
@@ -61,22 +67,30 @@ class _ProductFormPageState extends ConsumerState<ProductFormPage> {
     final quantity = double.tryParse(_quantityController.text.trim()) ?? 0.0;
 
     if (name.isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Product name is required')));
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(const SnackBar(content: Text('Product name is required')));
       return;
     }
 
     if (quantity <= 0) {
-      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Quantity must be greater than zero')));
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Quantity must be greater than zero')),
+      );
       return;
     }
 
     if (_selectedProductTypeId == null) {
-      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Product type is required')));
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(const SnackBar(content: Text('Product type is required')));
       return;
     }
 
     if (_selectedUnitId == null) {
-      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Unit is required')));
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(const SnackBar(content: Text('Unit is required')));
       return;
     }
 
@@ -109,7 +123,9 @@ class _ProductFormPageState extends ConsumerState<ProductFormPage> {
       if (mounted) Navigator.of(context).pop();
     } catch (error) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Error saving product: $error')));
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text('Error saving product: $error')));
       }
       setState(() => _isSubmitting = false);
     }
@@ -124,7 +140,9 @@ class _ProductFormPageState extends ConsumerState<ProductFormPage> {
 
     return Scaffold(
       resizeToAvoidBottomInset: true,
-      appBar: AppBar(title: Text(_isEditMode ? 'Edit Product' : 'Create Product')),
+      appBar: AppBar(
+        title: Text(_isEditMode ? 'Edit Product' : 'Create Product'),
+      ),
       body: SafeArea(
         child: SingleChildScrollView(
           padding: const EdgeInsets.all(24.0),
@@ -133,41 +151,81 @@ class _ProductFormPageState extends ConsumerState<ProductFormPage> {
             children: [
               TextField(
                 controller: _nameController,
-                decoration: InputDecoration(labelText: 'Product name', border: OutlineInputBorder(borderRadius: BorderRadius.circular(8))),
+                decoration: InputDecoration(
+                  labelText: 'Product name',
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                ),
                 textInputAction: TextInputAction.next,
               ),
               const SizedBox(height: 12),
-              Row(children: [
-                Expanded(
-                  child: TextField(
-                    controller: _quantityController,
-                    keyboardType: TextInputType.numberWithOptions(decimal: true),
-                    decoration: InputDecoration(labelText: 'Quantity', border: OutlineInputBorder(borderRadius: BorderRadius.circular(8))),
+              Row(
+                children: [
+                  Expanded(
+                    child: TextField(
+                      controller: _quantityController,
+                      keyboardType: TextInputType.numberWithOptions(
+                        decimal: true,
+                      ),
+                      decoration: InputDecoration(
+                        labelText: 'Quantity',
+                        border: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(8),
+                        ),
+                      ),
+                    ),
                   ),
-                ),
-                const SizedBox(width: 12),
-                Expanded(child: unitsAsync.when(
-                  data: (units) {
-                    return DropdownButtonFormField<int>(
-                      value: _selectedUnitId,
-                      decoration: InputDecoration(border: OutlineInputBorder(borderRadius: BorderRadius.circular(8))),
-                      items: units.map((u) => DropdownMenuItem(value: u.id, child: Text('${u.symbol} - ${u.name}'))).toList(),
-                      onChanged: (v) => setState(() => _selectedUnitId = v),
-                      hint: const Text('Unit'),
-                    );
-                  },
-                  loading: () => const SizedBox(),
-                  error: (e, s) => const SizedBox(),
-                )),
-              ]),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: unitsAsync.when(
+                      data: (units) {
+                        return DropdownButtonFormField<int>(
+                          value: _selectedUnitId,
+                          decoration: InputDecoration(
+                            border: OutlineInputBorder(
+                              borderRadius: BorderRadius.circular(8),
+                            ),
+                          ),
+                          items: units
+                              .map(
+                                (u) => DropdownMenuItem(
+                                  value: u.id,
+                                  child: Text('${u.symbol} - ${u.name}'),
+                                ),
+                              )
+                              .toList(),
+                          onChanged: (v) => setState(() => _selectedUnitId = v),
+                          hint: const Text('Unit'),
+                        );
+                      },
+                      loading: () => const SizedBox(),
+                      error: (e, s) => const SizedBox(),
+                    ),
+                  ),
+                ],
+              ),
               const SizedBox(height: 12),
               productTypesAsync.when(
                 data: (types) {
                   return DropdownButtonFormField<int>(
                     value: _selectedProductTypeId,
-                    decoration: InputDecoration(labelText: 'Product type', border: OutlineInputBorder(borderRadius: BorderRadius.circular(8))),
-                    items: types.map((t) => DropdownMenuItem(value: t.id, child: Text(t.name))).toList(),
-                    onChanged: (v) => setState(() => _selectedProductTypeId = v),
+                    decoration: InputDecoration(
+                      labelText: 'Product type',
+                      border: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                    ),
+                    items: types
+                        .map(
+                          (t) => DropdownMenuItem(
+                            value: t.id,
+                            child: Text(t.name),
+                          ),
+                        )
+                        .toList(),
+                    onChanged: (v) =>
+                        setState(() => _selectedProductTypeId = v),
                     hint: const Text('Select product type'),
                   );
                 },
@@ -175,19 +233,25 @@ class _ProductFormPageState extends ConsumerState<ProductFormPage> {
                 error: (e, s) => const SizedBox(),
               ),
               const SizedBox(height: 12),
-              Row(children: [
-                Expanded(
-                  child: OutlinedButton(
-                    onPressed: _pickExpirationDate,
-                    child: Text(_expirationDate != null ? '${_expirationDate!.toLocal()}'.split(' ')[0] : 'Select expiration date'),
+              Row(
+                children: [
+                  Expanded(
+                    child: OutlinedButton(
+                      onPressed: _pickExpirationDate,
+                      child: Text(
+                        _expirationDate != null
+                            ? '${_expirationDate!.toLocal()}'.split(' ')[0]
+                            : 'Select expiration date',
+                      ),
+                    ),
                   ),
-                ),
-                if (_expirationDate != null)
-                  IconButton(
-                    onPressed: () => setState(() => _expirationDate = null),
-                    icon: const Icon(Icons.clear),
-                  ),
-              ]),
+                  if (_expirationDate != null)
+                    IconButton(
+                      onPressed: () => setState(() => _expirationDate = null),
+                      icon: const Icon(Icons.clear),
+                    ),
+                ],
+              ),
             ],
           ),
         ),
@@ -202,7 +266,14 @@ class _ProductFormPageState extends ConsumerState<ProductFormPage> {
             child: ElevatedButton(
               onPressed: _isSubmitting ? null : _handleSave,
               child: _isSubmitting
-                  ? const SizedBox(height: 20, width: 20, child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white))
+                  ? const SizedBox(
+                      height: 20,
+                      width: 20,
+                      child: CircularProgressIndicator(
+                        strokeWidth: 2,
+                        color: Colors.white,
+                      ),
+                    )
                   : Text(_isEditMode ? 'Update' : 'Create'),
             ),
           ),

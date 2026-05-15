@@ -6,13 +6,22 @@ class ProductItemWidget extends StatelessWidget {
   final VoidCallback? onEdit;
   final VoidCallback? onDelete;
 
-  const ProductItemWidget({super.key, required this.product, this.onEdit, this.onDelete});
+  const ProductItemWidget({
+    super.key,
+    required this.product,
+    this.onEdit,
+    this.onDelete,
+  });
 
   @override
   Widget build(BuildContext context) {
-    final unitText = product.unit != null ? '${product.quantity} ${product.unit!.symbol}' : '${product.quantity}';
+    final unitText = product.unit != null
+        ? '${product.quantity} ${product.unit!.symbol}'
+        : '${product.quantity}';
     final productTypeName = product.productType?.name ?? '';
-    final expirationText = product.expirationDate != null ? '${product.expirationDate!.toLocal()}'.split(' ')[0] : 'No expiration';
+    final expirationText = product.expirationDate != null
+        ? '${product.expirationDate!.toLocal()}'.split(' ')[0]
+        : 'No expiration';
 
     return Card(
       margin: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
@@ -27,10 +36,13 @@ class ProductItemWidget extends StatelessWidget {
             Text('Expires: $expirationText'),
           ],
         ),
-        trailing: Row(mainAxisSize: MainAxisSize.min, children: [
-          IconButton(icon: const Icon(Icons.edit), onPressed: onEdit),
-          IconButton(icon: const Icon(Icons.delete), onPressed: onDelete),
-        ]),
+        trailing: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            IconButton(icon: const Icon(Icons.edit), onPressed: onEdit),
+            IconButton(icon: const Icon(Icons.delete), onPressed: onDelete),
+          ],
+        ),
       ),
     );
   }

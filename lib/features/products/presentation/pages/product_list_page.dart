@@ -18,7 +18,9 @@ class ProductListPage extends ConsumerWidget {
       body: productsAsync.when(
         data: (products) {
           if (products.isEmpty) {
-            return EmptyProductsWidget(onCreatePressed: () => _navigateToForm(context));
+            return EmptyProductsWidget(
+              onCreatePressed: () => _navigateToForm(context),
+            );
           }
 
           return ListView.builder(
@@ -34,7 +36,8 @@ class ProductListPage extends ConsumerWidget {
           );
         },
         loading: () => const Center(child: CircularProgressIndicator()),
-        error: (error, stack) => Center(child: Text('Error loading products: $error')),
+        error: (error, stack) =>
+            Center(child: Text('Error loading products: $error')),
       ),
       floatingActionButton: FloatingActionButton(
         onPressed: () => _navigateToForm(context),
@@ -46,19 +49,30 @@ class ProductListPage extends ConsumerWidget {
 
   void _navigateToForm(BuildContext context, [ProductModel? product]) {
     Navigator.of(context).push(
-      MaterialPageRoute(builder: (context) => ProductFormPage(product: product)),
+      MaterialPageRoute(
+        builder: (context) => ProductFormPage(product: product),
+      ),
     );
   }
 
-  void _handleDelete(BuildContext context, WidgetRef ref, ProductModel product) {
+  void _handleDelete(
+    BuildContext context,
+    WidgetRef ref,
+    ProductModel product,
+  ) {
     showDialog<void>(
       context: context,
       builder: (dialogContext) {
         return AlertDialog(
           title: const Text('Delete Product?'),
-          content: Text('Delete "${product.name}"? This action cannot be undone.'),
+          content: Text(
+            'Delete "${product.name}"? This action cannot be undone.',
+          ),
           actions: [
-            TextButton(onPressed: () => Navigator.of(dialogContext).pop(), child: const Text('Cancel')),
+            TextButton(
+              onPressed: () => Navigator.of(dialogContext).pop(),
+              child: const Text('Cancel'),
+            ),
             TextButton(
               onPressed: () async {
                 Navigator.of(dialogContext).pop();
@@ -67,7 +81,9 @@ class ProductListPage extends ConsumerWidget {
                   await viewModel.deleteProduct(product.id);
                 } catch (error) {
                   if (context.mounted) {
-                    ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Error deleting product: $error')));
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      SnackBar(content: Text('Error deleting product: $error')),
+                    );
                   }
                 }
               },
