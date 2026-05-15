@@ -8,6 +8,7 @@ import 'package:path_provider/path_provider.dart';
 import 'package:tudo_em_casa/core/database/tables/categories.dart';
 import 'package:tudo_em_casa/core/database/tables/product_types.dart';
 import 'package:tudo_em_casa/core/database/tables/units.dart';
+import 'package:tudo_em_casa/core/database/tables/products.dart';
 
 part 'app_database.g.dart';
 
@@ -22,14 +23,14 @@ LazyDatabase _openConnection() {
   });
 }
 
-@DriftDatabase(tables: [Categories, ProductTypes, Units])
+@DriftDatabase(tables: [Categories, ProductTypes, Units, Products])
 class AppDatabase extends _$AppDatabase {
   AppDatabase() : super(_openConnection());
 
   AppDatabase.forTesting(super.executor);
 
   @override
-  int get schemaVersion => 3;
+  int get schemaVersion => 4;
 
   @override
   MigrationStrategy get migration => MigrationStrategy(
@@ -43,6 +44,10 @@ class AppDatabase extends _$AppDatabase {
 
       if (from < 3) {
         await m.createTable(units);
+      }
+
+      if (from < 4) {
+        await m.createTable(products);
       }
     },
   );

@@ -1,0 +1,213 @@
+import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:tudo_em_casa/features/product_types/data/providers/product_type_repository_provider.dart';
+import 'package:tudo_em_casa/features/units/data/providers/unit_repository_provider.dart';
+import 'package:tudo_em_casa/features/products/data/models/index.dart';
+import 'package:tudo_em_casa/features/products/presentation/viewmodels/product_list_viewmodel.dart';
+
+class ProductFormPage extends ConsumerStatefulWidget {
+  final ProductModel? product;
+
+  const ProductFormPage({super.key, this.product});
+
+  @override
+  ConsumerState<ProductFormPage> createState() => _ProductFormPageState();
+}
+
+class _ProductFormPageState extends ConsumerState<ProductFormPage> {
+  late TextEditingController _nameController;
+  late TextEditingController _quantityController;
+  int? _selectedProductTypeId;
+  int? _selectedUnitId;
+  DateTime? _expirationDate;
+  bool _isSubmitting = false;
+
+  bool get _isEditMode => widget.product != null;
+
+  @override
+  void initState() {
+    super.initState();
+    _nameController = TextEditingController(text: _isEditMode ? widget.product!.name : '');
+    _quantityController = TextEditingController(text: _isEditMode ? widget.product!.quantity.toString() : '0');
+    _selectedProductTypeId = _isEditMode ? widget.product!.productTypeId : null;
+    _selectedUnitId = _isEditMode ? widget.product!.unitId : null;
+    _expirationDate = _isEditMode ? widget.product!.expirationDate : null;
+  }
+
+  @override
+  void dispose() {
+    _nameController.dispose();
+    _quantityController.dispose();
+    super.dispose();
+  }
+
+  Future<void> _pickExpirationDate() async {
+    final now = DateTime.now();
+    final initial = _expirationDate ?? now;
+    final picked = await showDatePicker(
+      context: context,
+      initialDate: initial,
+      firstDate: DateTime(1900),
+      lastDate: DateTime(2100),
+    );
+
+    if (picked != null) {
+      setState(() => _expirationDate = DateTime(picked.year, picked.month, picked.day));
+    }
+  }
+
+  Future<void> _handleSave() async {
+    final name = _nameController.text.trim();
+    final quantity = double.tryParse(_quantityController.text.trim()) ?? 0.0;
+
+    if (name.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Product name is required')));
+      return;
+    }
+
+    if (quantity <= 0) {
+      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Quantity must be greater than zero')));
+      return;
+    }
+
+    if (_selectedProductTypeId == null) {
+      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Product type is required')));
+      return;
+    }
+
+    if (_selectedUnitId == null) {
+      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Unit is required')));
+      return;
+    }
+
+    setState(() => _isSubmitting = true);
+
+    try {
+      final viewModel = ref.read(productListViewModelProvider);
+
+      if (_isEditMode) {
+        final updated = widget.product!.copyWith(
+          name: name,
+          quantity: quantity,
+          productTypeId: _selectedProductTypeId,
+          unitId: _selectedUnitId,
+          expirationDate: _expirationDate,
+        );
+        await viewModel.updateProduct(updated);
+      } else {
+        await viewModel.createProduct(
+          ProductModel.create(
+            name: name,
+            productTypeId: _selectedProductTypeId!,
+            unitId: _selectedUnitId!,
+            quantity: quantity,
+            expirationDate: _expirationDate,
+          ),
+        );
+      }
+
+      if (mounted) Navigator.of(context).pop();
+    } catch (error) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Error saving product: $error')));
+      }
+      setState(() => _isSubmitting = false);
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final keyboardInset = MediaQuery.viewInsetsOf(context).bottom;
+
+    final productTypesAsync = ref.watch(watchAllProductTypesProvider);
+    final unitsAsync = ref.watch(watchAllUnitsProvider);
+
+    return Scaffold(
+      resizeToAvoidBottomInset: true,
+      appBar: AppBar(title: Text(_isEditMode ? 'Edit Product' : 'Create Product')),
+      body: SafeArea(
+        child: SingleChildScrollView(
+          padding: const EdgeInsets.all(24.0),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              TextField(
+                controller: _nameController,
+                decoration: InputDecoration(labelText: 'Product name', border: OutlineInputBorder(borderRadius: BorderRadius.circular(8))),
+                textInputAction: TextInputAction.next,
+              ),
+              const SizedBox(height: 12),
+              Row(children: [
+                Expanded(
+                  child: TextField(
+                    controller: _quantityController,
+                    keyboardType: TextInputType.numberWithOptions(decimal: true),
+                    decoration: InputDecoration(labelText: 'Quantity', border: OutlineInputBorder(borderRadius: BorderRadius.circular(8))),
+                  ),
+                ),
+                const SizedBox(width: 12),
+                Expanded(child: unitsAsync.when(
+                  data: (units) {
+                    return DropdownButtonFormField<int>(
+                      value: _selectedUnitId,
+                      decoration: InputDecoration(border: OutlineInputBorder(borderRadius: BorderRadius.circular(8))),
+                      items: units.map((u) => DropdownMenuItem(value: u.id, child: Text('${u.symbol} - ${u.name}'))).toList(),
+                      onChanged: (v) => setState(() => _selectedUnitId = v),
+                      hint: const Text('Unit'),
+                    );
+                  },
+                  loading: () => const SizedBox(),
+                  error: (e, s) => const SizedBox(),
+                )),
+              ]),
+              const SizedBox(height: 12),
+              productTypesAsync.when(
+                data: (types) {
+                  return DropdownButtonFormField<int>(
+                    value: _selectedProductTypeId,
+                    decoration: InputDecoration(labelText: 'Product type', border: OutlineInputBorder(borderRadius: BorderRadius.circular(8))),
+                    items: types.map((t) => DropdownMenuItem(value: t.id, child: Text(t.name))).toList(),
+                    onChanged: (v) => setState(() => _selectedProductTypeId = v),
+                    hint: const Text('Select product type'),
+                  );
+                },
+                loading: () => const SizedBox(),
+                error: (e, s) => const SizedBox(),
+              ),
+              const SizedBox(height: 12),
+              Row(children: [
+                Expanded(
+                  child: OutlinedButton(
+                    onPressed: _pickExpirationDate,
+                    child: Text(_expirationDate != null ? '${_expirationDate!.toLocal()}'.split(' ')[0] : 'Select expiration date'),
+                  ),
+                ),
+                if (_expirationDate != null)
+                  IconButton(
+                    onPressed: () => setState(() => _expirationDate = null),
+                    icon: const Icon(Icons.clear),
+                  ),
+              ]),
+            ],
+          ),
+        ),
+      ),
+      bottomNavigationBar: Padding(
+        padding: EdgeInsets.only(bottom: keyboardInset),
+        child: SafeArea(
+          top: false,
+          minimum: const EdgeInsets.fromLTRB(24.0, 0, 24.0, 24.0),
+          child: SizedBox(
+            width: double.infinity,
+            child: ElevatedButton(
+              onPressed: _isSubmitting ? null : _handleSave,
+              child: _isSubmitting
+                  ? const SizedBox(height: 20, width: 20, child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white))
+                  : Text(_isEditMode ? 'Update' : 'Create'),
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+}
