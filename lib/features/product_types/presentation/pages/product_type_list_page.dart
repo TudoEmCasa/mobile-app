@@ -6,14 +6,25 @@ import 'package:tudo_em_casa/features/product_types/presentation/viewmodels/inde
 import 'package:tudo_em_casa/features/product_types/presentation/widgets/index.dart';
 
 class ProductTypeListPage extends ConsumerWidget {
-  const ProductTypeListPage({super.key});
+  final bool selectionMode;
+  final String selectionTitle;
+  final int? selectedProductTypeId;
+
+  const ProductTypeListPage({
+    super.key,
+    this.selectionMode = false,
+    this.selectionTitle = 'Select Product Type',
+    this.selectedProductTypeId,
+  });
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final productTypesAsync = ref.watch(productTypesStreamProvider);
 
     return Scaffold(
-      appBar: AppBar(title: const Text('Product Types')),
+      appBar: AppBar(
+        title: Text(selectionMode ? selectionTitle : 'Product Types'),
+      ),
       body: productTypesAsync.when(
         data: (productTypes) {
           if (productTypes.isEmpty) {
@@ -28,6 +39,12 @@ class ProductTypeListPage extends ConsumerWidget {
               final productType = productTypes[index];
               return ProductTypeItemWidget(
                 productType: productType,
+                selectable: selectionMode,
+                selected: productType.id == selectedProductTypeId,
+                onSelected: selectionMode
+                    ? (selectedProductType) =>
+                          Navigator.of(context).pop(selectedProductType)
+                    : null,
                 onEdit: () => _navigateToProductTypeForm(context, productType),
                 onDelete: () =>
                     _handleDeleteProductType(context, ref, productType),

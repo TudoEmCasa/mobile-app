@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:tudo_em_casa/features/product_types/data/models/index.dart';
 import 'package:tudo_em_casa/features/product_types/data/providers/product_type_repository_provider.dart';
+import 'package:tudo_em_casa/features/product_types/presentation/pages/index.dart';
 import 'package:tudo_em_casa/features/units/data/models/index.dart';
 import 'package:tudo_em_casa/features/units/data/providers/unit_repository_provider.dart';
 import 'package:tudo_em_casa/features/units/presentation/pages/index.dart';
@@ -20,6 +22,7 @@ class _ProductFormPageState extends ConsumerState<ProductFormPage> {
   late TextEditingController _nameController;
   late TextEditingController _quantityController;
   int? _selectedProductTypeId;
+  ProductTypeModel? _selectedProductType;
   int? _selectedUnitId;
   UnitModel? _selectedUnit;
   DateTime? _expirationDate;
@@ -37,6 +40,7 @@ class _ProductFormPageState extends ConsumerState<ProductFormPage> {
       text: _isEditMode ? widget.product!.quantity.toString() : '0',
     );
     _selectedProductTypeId = _isEditMode ? widget.product!.productTypeId : null;
+    _selectedProductType = _isEditMode ? widget.product!.productType : null;
     _selectedUnitId = _isEditMode ? widget.product!.unitId : null;
     _selectedUnit = _isEditMode ? widget.product!.unit : null;
     _expirationDate = _isEditMode ? widget.product!.expirationDate : null;
@@ -81,6 +85,26 @@ class _ProductFormPageState extends ConsumerState<ProductFormPage> {
       setState(() {
         _selectedUnit = selectedUnit;
         _selectedUnitId = selectedUnit.id;
+      });
+    }
+  }
+
+  Future<void> _selectProductType() async {
+    final selectedProductType = await Navigator.of(context)
+        .push<ProductTypeModel>(
+          MaterialPageRoute(
+            builder: (context) => ProductTypeListPage(
+              selectionMode: true,
+              selectionTitle: 'Select Product Type',
+              selectedProductTypeId: _selectedProductTypeId,
+            ),
+          ),
+        );
+
+    if (selectedProductType != null) {
+      setState(() {
+        _selectedProductType = selectedProductType;
+        _selectedProductTypeId = selectedProductType.id;
       });
     }
   }
@@ -160,6 +184,26 @@ class _ProductFormPageState extends ConsumerState<ProductFormPage> {
 
     final productTypesAsync = ref.watch(watchAllProductTypesProvider);
     final unitsAsync = ref.watch(watchAllUnitsProvider);
+    final selectedProductTypeFromList = productTypesAsync.maybeWhen(
+      data: (productTypes) {
+        if (_selectedProductType != null) {
+          return _selectedProductType;
+        }
+
+        if (_selectedProductTypeId == null) {
+          return null;
+        }
+
+        for (final productType in productTypes) {
+          if (productType.id == _selectedProductTypeId) {
+            return productType;
+          }
+        }
+
+        return null;
+      },
+      orElse: () => _selectedProductType,
+    );
     final selectedUnitFromList = unitsAsync.maybeWhen(
       data: (units) {
         if (_selectedUnit != null) {
@@ -250,31 +294,28 @@ class _ProductFormPageState extends ConsumerState<ProductFormPage> {
                 ],
               ),
               const SizedBox(height: 12),
-              productTypesAsync.when(
-                data: (types) {
-                  return DropdownButtonFormField<int>(
-                    value: _selectedProductTypeId,
-                    decoration: InputDecoration(
-                      labelText: 'Product type',
-                      border: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(8),
-                      ),
+              InkWell(
+                onTap: _isSubmitting ? null : _selectProductType,
+                borderRadius: BorderRadius.circular(8),
+                child: InputDecorator(
+                  decoration: InputDecoration(
+                    labelText: 'Product type',
+                    border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(8),
                     ),
-                    items: types
-                        .map(
-                          (t) => DropdownMenuItem(
-                            value: t.id,
-                            child: Text(t.name),
+                    suffixIcon: const Icon(Icons.chevron_right),
+                  ),
+                  child: Text(
+                    selectedProductTypeFromList != null
+                        ? selectedProductTypeFromList.name
+                        : 'Select product type',
+                    style: selectedProductTypeFromList != null
+                        ? null
+                        : Theme.of(context).textTheme.bodyMedium?.copyWith(
+                            color: Theme.of(context).hintColor,
                           ),
-                        )
-                        .toList(),
-                    onChanged: (v) =>
-                        setState(() => _selectedProductTypeId = v),
-                    hint: const Text('Select product type'),
-                  );
-                },
-                loading: () => const SizedBox(),
-                error: (e, s) => const SizedBox(),
+                  ),
+                ),
               ),
               const SizedBox(height: 12),
               Row(
