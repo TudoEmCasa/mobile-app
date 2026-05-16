@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:tudo_em_casa/core/feedback/app_snackbar.dart';
 import 'package:tudo_em_casa/core/utils/date_formatter.dart';
 import 'package:tudo_em_casa/features/product_types/data/models/index.dart';
 import 'package:tudo_em_casa/features/product_types/data/providers/product_type_repository_provider.dart';
@@ -115,30 +116,22 @@ class _ProductFormPageState extends ConsumerState<ProductFormPage> {
     final quantity = double.tryParse(_quantityController.text.trim()) ?? 0.0;
 
     if (name.isEmpty) {
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(const SnackBar(content: Text('Product name is required')));
+      AppSnackbar.error(context, 'Product name is required');
       return;
     }
 
     if (quantity <= 0) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Quantity must be greater than zero')),
-      );
+      AppSnackbar.error(context, 'Quantity must be greater than zero');
       return;
     }
 
     if (_selectedProductTypeId == null) {
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(const SnackBar(content: Text('Product type is required')));
+      AppSnackbar.error(context, 'Product type is required');
       return;
     }
 
     if (_selectedUnitId == null) {
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(const SnackBar(content: Text('Unit is required')));
+      AppSnackbar.error(context, 'Unit is required');
       return;
     }
 
@@ -168,12 +161,10 @@ class _ProductFormPageState extends ConsumerState<ProductFormPage> {
         );
       }
 
-      if (mounted) Navigator.of(context).pop();
+      if (mounted) Navigator.of(context).pop(true);
     } catch (error) {
       if (mounted) {
-        ScaffoldMessenger.of(
-          context,
-        ).showSnackBar(SnackBar(content: Text('Error saving product: $error')));
+        AppSnackbar.error(context, 'Failed to save product');
       }
       setState(() => _isSubmitting = false);
     }

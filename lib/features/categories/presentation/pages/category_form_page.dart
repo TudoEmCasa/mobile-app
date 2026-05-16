@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:tudo_em_casa/core/feedback/app_snackbar.dart';
 import 'package:tudo_em_casa/features/categories/data/models/index.dart';
 import 'package:tudo_em_casa/features/categories/presentation/viewmodels/index.dart';
 
@@ -42,9 +43,7 @@ class _CategoryFormPageState extends ConsumerState<CategoryFormPage> {
     final name = _nameController.text.trim();
 
     if (name.isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Category name is required')),
-      );
+      AppSnackbar.error(context, 'Category name is required');
       return;
     }
 
@@ -59,13 +58,11 @@ class _CategoryFormPageState extends ConsumerState<CategoryFormPage> {
         await viewModel.createCategory(name);
       }
       if (mounted) {
-        Navigator.of(context).pop();
+        Navigator.of(context).pop(true);
       }
     } catch (error) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Error saving category: $error')),
-        );
+        AppSnackbar.error(context, 'Failed to save category');
       }
       setState(() => _isSubmitting = false);
     }

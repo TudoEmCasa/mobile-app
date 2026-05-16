@@ -1,17 +1,25 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:tudo_em_casa/features/management/presentation/pages/management_page.dart';
 import 'package:tudo_em_casa/features/products/presentation/pages/product_list_page.dart';
 import 'package:tudo_em_casa/features/settings/presentation/pages/settings_page.dart';
 
-class AppShellPage extends StatefulWidget {
-  const AppShellPage({super.key});
+final appShellTabIndexProvider =
+    NotifierProvider<AppShellTabIndexNotifier, int>(
+      AppShellTabIndexNotifier.new,
+    );
 
+class AppShellTabIndexNotifier extends Notifier<int> {
   @override
-  State<AppShellPage> createState() => _AppShellPageState();
+  int build() => 0;
+
+  void setIndex(int index) {
+    state = index;
+  }
 }
 
-class _AppShellPageState extends State<AppShellPage> {
-  int _selectedIndex = 0;
+class AppShellPage extends ConsumerWidget {
+  const AppShellPage({super.key});
 
   final List<Widget> _pages = const [
     ProductListPage(),
@@ -20,15 +28,15 @@ class _AppShellPageState extends State<AppShellPage> {
   ];
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
+    final selectedIndex = ref.watch(appShellTabIndexProvider);
+
     return Scaffold(
-      body: IndexedStack(index: _selectedIndex, children: _pages),
+      body: IndexedStack(index: selectedIndex, children: _pages),
       bottomNavigationBar: NavigationBar(
-        selectedIndex: _selectedIndex,
+        selectedIndex: selectedIndex,
         onDestinationSelected: (index) {
-          setState(() {
-            _selectedIndex = index;
-          });
+          ref.read(appShellTabIndexProvider.notifier).setIndex(index);
         },
         destinations: const [
           NavigationDestination(

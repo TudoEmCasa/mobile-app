@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:tudo_em_casa/core/feedback/app_snackbar.dart';
 import 'package:tudo_em_casa/features/units/data/models/index.dart';
 import 'package:tudo_em_casa/features/units/presentation/viewmodels/index.dart';
 
@@ -48,16 +49,12 @@ class _UnitFormPageState extends ConsumerState<UnitFormPage> {
     final symbol = _symbolController.text.trim();
 
     if (name.isEmpty) {
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(const SnackBar(content: Text('Unit name is required')));
+      AppSnackbar.error(context, 'Unit name is required');
       return;
     }
 
     if (symbol.isEmpty) {
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(const SnackBar(content: Text('Unit symbol is required')));
+      AppSnackbar.error(context, 'Unit symbol is required');
       return;
     }
 
@@ -72,12 +69,10 @@ class _UnitFormPageState extends ConsumerState<UnitFormPage> {
         await viewModel.createUnit(name, symbol);
       }
 
-      if (mounted) Navigator.of(context).pop();
+      if (mounted) Navigator.of(context).pop(true);
     } catch (error) {
       if (mounted) {
-        ScaffoldMessenger.of(
-          context,
-        ).showSnackBar(SnackBar(content: Text('Error saving unit: $error')));
+        AppSnackbar.error(context, 'Failed to save unit');
       }
       setState(() => _isSubmitting = false);
     }

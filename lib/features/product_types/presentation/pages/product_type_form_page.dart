@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:tudo_em_casa/core/feedback/app_snackbar.dart';
 import 'package:tudo_em_casa/features/categories/data/models/index.dart';
 import 'package:tudo_em_casa/features/categories/data/providers/index.dart';
 import 'package:tudo_em_casa/features/categories/presentation/pages/index.dart';
@@ -50,16 +51,12 @@ class _ProductTypeFormPageState extends ConsumerState<ProductTypeFormPage> {
     final name = _nameController.text.trim();
 
     if (name.isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Product type name is required')),
-      );
+      AppSnackbar.error(context, 'Product type name is required');
       return;
     }
 
     if (_selectedCategoryId == null) {
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(const SnackBar(content: Text('Category is required')));
+      AppSnackbar.error(context, 'Category is required');
       return;
     }
 
@@ -77,13 +74,11 @@ class _ProductTypeFormPageState extends ConsumerState<ProductTypeFormPage> {
         await viewModel.createProductType(name, _selectedCategoryId!);
       }
       if (mounted) {
-        Navigator.of(context).pop();
+        Navigator.of(context).pop(true);
       }
     } catch (error) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Error saving product type: $error')),
-        );
+        AppSnackbar.error(context, 'Failed to save product type');
       }
       setState(() => _isSubmitting = false);
     }
@@ -196,7 +191,7 @@ class _ProductTypeFormPageState extends ConsumerState<ProductTypeFormPage> {
         },
         loading: () => const Center(child: CircularProgressIndicator()),
         error: (error, stackTrace) =>
-            Center(child: Text('Error loading categories: $error')),
+            const Center(child: Text('Failed to load categories')),
       ),
       bottomNavigationBar: Padding(
         padding: EdgeInsets.only(bottom: keyboardInset),

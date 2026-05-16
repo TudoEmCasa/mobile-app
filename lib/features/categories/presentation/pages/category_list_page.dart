@@ -1,12 +1,14 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:tudo_em_casa/core/feedback/app_snackbar.dart';
+import 'package:tudo_em_casa/core/feedback/load_error_feedback_mixin.dart';
 import 'package:tudo_em_casa/features/categories/data/models/index.dart';
 import 'package:tudo_em_casa/features/categories/data/providers/index.dart';
 import 'package:tudo_em_casa/features/categories/presentation/pages/category_form_page.dart';
 import 'package:tudo_em_casa/features/categories/presentation/viewmodels/index.dart';
 import 'package:tudo_em_casa/features/categories/presentation/widgets/index.dart';
 
-class CategoryListPage extends ConsumerWidget {
+class CategoryListPage extends ConsumerStatefulWidget {
   final bool selectionMode;
   final String selectionTitle;
   final int? selectedCategoryId;
@@ -19,15 +21,25 @@ class CategoryListPage extends ConsumerWidget {
   });
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  ConsumerState<CategoryListPage> createState() => _CategoryListPageState();
+}
+
+class _CategoryListPageState extends ConsumerState<CategoryListPage>
+    with LoadErrorFeedbackMixin {
+  @override
+  Widget build(BuildContext context) {
     final categoriesAsync = ref.watch(watchAllCategoriesProvider);
 
     return Scaffold(
       appBar: AppBar(
-        title: Text(selectionMode ? selectionTitle : 'Categories'),
+        title: Text(
+          widget.selectionMode ? widget.selectionTitle : 'Categories',
+        ),
       ),
       body: categoriesAsync.when(
         data: (categories) {
+          clearLoadErrorFeedback();
+
           if (categories.isEmpty) {
             return EmptyCategoriesWidget(
               onCreatePressed: () => _navigateToCategoryForm(context),
@@ -40,9 +52,9 @@ class CategoryListPage extends ConsumerWidget {
               final category = categories[index];
               return CategoryItemWidget(
                 category: category,
-                selectable: selectionMode,
-                selected: category.id == selectedCategoryId,
-                onSelected: selectionMode
+                selectable: widget.selectionMode,
+                selected: category.id == widget.selectedCategoryId,
+                onSelected: widget.selectionMode
                     ? (selectedCategory) =>
                           Navigator.of(context).pop(selectedCategory)
                     : null,
@@ -53,25 +65,23 @@ class CategoryListPage extends ConsumerWidget {
           );
         },
         loading: () => const Center(child: CircularProgressIndicator()),
-        error: (error, stackTrace) => Center(
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              Icon(Icons.error_outline, size: 64, color: Colors.red.shade400),
-              const SizedBox(height: 16),
-              Text(
-                'Error loading categories',
-                style: Theme.of(context).textTheme.titleLarge,
-              ),
-              const SizedBox(height: 8),
-              Text(
-                error.toString(),
-                style: Theme.of(context).textTheme.bodyMedium,
-                textAlign: TextAlign.center,
-              ),
-            ],
-          ),
-        ),
+        error: (error, stackTrace) {
+          showLoadErrorFeedback('Failed to load categories');
+
+          return Center(
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Icon(Icons.error_outline, size: 64, color: Colors.red.shade400),
+                const SizedBox(height: 16),
+                Text(
+                  'Failed to load categories',
+                  style: Theme.of(context).textTheme.titleLarge,
+                ),
+              ],
+            ),
+          );
+        },
       ),
       floatingActionButton: FloatingActionButton(
         onPressed: () => _navigateToCategoryForm(context),
@@ -81,15 +91,22 @@ class CategoryListPage extends ConsumerWidget {
     );
   }
 
-  void _navigateToCategoryForm(
+  Future<void> _navigateToCategoryForm(
     BuildContext context, [
     CategoryModel? category,
-  ]) {
-    Navigator.of(context).push(
+  ]) async {
+    final saved = await Navigator.of(context).push<bool>(
       MaterialPageRoute(
         builder: (context) => CategoryFormPage(category: category),
       ),
     );
+
+    if (saved == true && context.mounted) {
+      AppSnackbar.success(
+        context,
+        category == null ? 'Category created' : 'Category updated',
+      );
+    }
   }
 
   void _handleDeleteCategory(
@@ -116,13 +133,12 @@ class CategoryListPage extends ConsumerWidget {
                 try {
                   final viewModel = ref.read(categoryListViewModelProvider);
                   await viewModel.deleteCategory(category.id);
+                  if (context.mounted) {
+                    AppSnackbar.success(context, 'Category removed');
+                  }
                 } catch (error) {
                   if (context.mounted) {
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      SnackBar(
-                        content: Text('Error deleting category: $error'),
-                      ),
-                    );
+                    AppSnackbar.error(context, 'Failed to delete category');
                   }
                 }
               },

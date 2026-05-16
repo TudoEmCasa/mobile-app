@@ -1,12 +1,14 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:tudo_em_casa/core/feedback/app_snackbar.dart';
+import 'package:tudo_em_casa/core/feedback/load_error_feedback_mixin.dart';
 import 'package:tudo_em_casa/features/units/data/models/index.dart';
 import 'package:tudo_em_casa/features/units/data/providers/index.dart';
 import 'package:tudo_em_casa/features/units/presentation/pages/unit_form_page.dart';
 import 'package:tudo_em_casa/features/units/presentation/viewmodels/index.dart';
 import 'package:tudo_em_casa/features/units/presentation/widgets/index.dart';
 
-class UnitListPage extends ConsumerWidget {
+class UnitListPage extends ConsumerStatefulWidget {
   final bool selectionMode;
   final String selectionTitle;
   final int? selectedUnitId;
@@ -19,13 +21,23 @@ class UnitListPage extends ConsumerWidget {
   });
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  ConsumerState<UnitListPage> createState() => _UnitListPageState();
+}
+
+class _UnitListPageState extends ConsumerState<UnitListPage>
+    with LoadErrorFeedbackMixin {
+  @override
+  Widget build(BuildContext context) {
     final unitsAsync = ref.watch(watchAllUnitsProvider);
 
     return Scaffold(
-      appBar: AppBar(title: Text(selectionMode ? selectionTitle : 'Units')),
+      appBar: AppBar(
+        title: Text(widget.selectionMode ? widget.selectionTitle : 'Units'),
+      ),
       body: unitsAsync.when(
         data: (units) {
+          clearLoadErrorFeedback();
+
           if (units.isEmpty) {
             return EmptyUnitsWidget(
               onCreatePressed: () => _navigateToUnitForm(context),
@@ -38,9 +50,9 @@ class UnitListPage extends ConsumerWidget {
               final unit = units[index];
               return UnitItemWidget(
                 unit: unit,
-                selectable: selectionMode,
-                selected: unit.id == selectedUnitId,
-                onSelected: selectionMode
+                selectable: widget.selectionMode,
+                selected: unit.id == widget.selectedUnitId,
+                onSelected: widget.selectionMode
                     ? (selectedUnit) => Navigator.of(context).pop(selectedUnit)
                     : null,
                 onEdit: () => _navigateToUnitForm(context, unit),
@@ -50,25 +62,23 @@ class UnitListPage extends ConsumerWidget {
           );
         },
         loading: () => const Center(child: CircularProgressIndicator()),
-        error: (error, stackTrace) => Center(
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              Icon(Icons.error_outline, size: 64, color: Colors.red.shade400),
-              const SizedBox(height: 16),
-              Text(
-                'Error loading units',
-                style: Theme.of(context).textTheme.titleLarge,
-              ),
-              const SizedBox(height: 8),
-              Text(
-                error.toString(),
-                style: Theme.of(context).textTheme.bodyMedium,
-                textAlign: TextAlign.center,
-              ),
-            ],
-          ),
-        ),
+        error: (error, stackTrace) {
+          showLoadErrorFeedback('Failed to load units');
+
+          return Center(
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Icon(Icons.error_outline, size: 64, color: Colors.red.shade400),
+                const SizedBox(height: 16),
+                Text(
+                  'Failed to load units',
+                  style: Theme.of(context).textTheme.titleLarge,
+                ),
+              ],
+            ),
+          );
+        },
       ),
       floatingActionButton: FloatingActionButton(
         onPressed: () => _navigateToUnitForm(context),
@@ -78,10 +88,20 @@ class UnitListPage extends ConsumerWidget {
     );
   }
 
-  void _navigateToUnitForm(BuildContext context, [UnitModel? unit]) {
-    Navigator.of(
-      context,
-    ).push(MaterialPageRoute(builder: (context) => UnitFormPage(unit: unit)));
+  Future<void> _navigateToUnitForm(
+    BuildContext context, [
+    UnitModel? unit,
+  ]) async {
+    final saved = await Navigator.of(context).push<bool>(
+      MaterialPageRoute(builder: (context) => UnitFormPage(unit: unit)),
+    );
+
+    if (saved == true && context.mounted) {
+      AppSnackbar.success(
+        context,
+        unit == null ? 'Unit created' : 'Unit updated',
+      );
+    }
   }
 
   void _handleDeleteUnit(BuildContext context, WidgetRef ref, UnitModel unit) {
@@ -102,11 +122,12 @@ class UnitListPage extends ConsumerWidget {
                 try {
                   final viewModel = ref.read(unitListViewModelProvider);
                   await viewModel.deleteUnit(unit.id);
+                  if (context.mounted) {
+                    AppSnackbar.success(context, 'Unit removed');
+                  }
                 } catch (error) {
                   if (context.mounted) {
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      SnackBar(content: Text('Error deleting unit: $error')),
-                    );
+                    AppSnackbar.error(context, 'Failed to delete unit');
                   }
                 }
               },

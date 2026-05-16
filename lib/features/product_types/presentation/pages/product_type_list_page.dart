@@ -1,11 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:tudo_em_casa/core/feedback/app_snackbar.dart';
+import 'package:tudo_em_casa/core/feedback/load_error_feedback_mixin.dart';
 import 'package:tudo_em_casa/features/product_types/data/models/index.dart';
 import 'package:tudo_em_casa/features/product_types/presentation/pages/product_type_form_page.dart';
 import 'package:tudo_em_casa/features/product_types/presentation/viewmodels/index.dart';
 import 'package:tudo_em_casa/features/product_types/presentation/widgets/index.dart';
 
-class ProductTypeListPage extends ConsumerWidget {
+class ProductTypeListPage extends ConsumerStatefulWidget {
   final bool selectionMode;
   final String selectionTitle;
   final int? selectedProductTypeId;
@@ -18,15 +20,26 @@ class ProductTypeListPage extends ConsumerWidget {
   });
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  ConsumerState<ProductTypeListPage> createState() =>
+      _ProductTypeListPageState();
+}
+
+class _ProductTypeListPageState extends ConsumerState<ProductTypeListPage>
+    with LoadErrorFeedbackMixin {
+  @override
+  Widget build(BuildContext context) {
     final productTypesAsync = ref.watch(productTypesStreamProvider);
 
     return Scaffold(
       appBar: AppBar(
-        title: Text(selectionMode ? selectionTitle : 'Product Types'),
+        title: Text(
+          widget.selectionMode ? widget.selectionTitle : 'Product Types',
+        ),
       ),
       body: productTypesAsync.when(
         data: (productTypes) {
+          clearLoadErrorFeedback();
+
           if (productTypes.isEmpty) {
             return EmptyProductTypesWidget(
               onCreatePressed: () => _navigateToProductTypeForm(context),
@@ -39,9 +52,9 @@ class ProductTypeListPage extends ConsumerWidget {
               final productType = productTypes[index];
               return ProductTypeItemWidget(
                 productType: productType,
-                selectable: selectionMode,
-                selected: productType.id == selectedProductTypeId,
-                onSelected: selectionMode
+                selectable: widget.selectionMode,
+                selected: productType.id == widget.selectedProductTypeId,
+                onSelected: widget.selectionMode
                     ? (selectedProductType) =>
                           Navigator.of(context).pop(selectedProductType)
                     : null,
@@ -53,25 +66,23 @@ class ProductTypeListPage extends ConsumerWidget {
           );
         },
         loading: () => const Center(child: CircularProgressIndicator()),
-        error: (error, stackTrace) => Center(
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              Icon(Icons.error_outline, size: 64, color: Colors.red.shade400),
-              const SizedBox(height: 16),
-              Text(
-                'Error loading product types',
-                style: Theme.of(context).textTheme.titleLarge,
-              ),
-              const SizedBox(height: 8),
-              Text(
-                error.toString(),
-                style: Theme.of(context).textTheme.bodyMedium,
-                textAlign: TextAlign.center,
-              ),
-            ],
-          ),
-        ),
+        error: (error, stackTrace) {
+          showLoadErrorFeedback('Failed to load product types');
+
+          return Center(
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Icon(Icons.error_outline, size: 64, color: Colors.red.shade400),
+                const SizedBox(height: 16),
+                Text(
+                  'Failed to load product types',
+                  style: Theme.of(context).textTheme.titleLarge,
+                ),
+              ],
+            ),
+          );
+        },
       ),
       floatingActionButton: FloatingActionButton(
         onPressed: () => _navigateToProductTypeForm(context),
@@ -81,15 +92,22 @@ class ProductTypeListPage extends ConsumerWidget {
     );
   }
 
-  void _navigateToProductTypeForm(
+  Future<void> _navigateToProductTypeForm(
     BuildContext context, [
     ProductTypeModel? productType,
-  ]) {
-    Navigator.of(context).push(
+  ]) async {
+    final saved = await Navigator.of(context).push<bool>(
       MaterialPageRoute(
         builder: (context) => ProductTypeFormPage(productType: productType),
       ),
     );
+
+    if (saved == true && context.mounted) {
+      AppSnackbar.success(
+        context,
+        productType == null ? 'Product type created' : 'Product type updated',
+      );
+    }
   }
 
   void _handleDeleteProductType(
@@ -116,13 +134,12 @@ class ProductTypeListPage extends ConsumerWidget {
                 try {
                   final viewModel = ref.read(productTypeListViewModelProvider);
                   await viewModel.deleteProductType(productType.id);
+                  if (context.mounted) {
+                    AppSnackbar.success(context, 'Product type removed');
+                  }
                 } catch (error) {
                   if (context.mounted) {
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      SnackBar(
-                        content: Text('Error deleting product type: $error'),
-                      ),
-                    );
+                    AppSnackbar.error(context, 'Failed to delete product type');
                   }
                 }
               },
