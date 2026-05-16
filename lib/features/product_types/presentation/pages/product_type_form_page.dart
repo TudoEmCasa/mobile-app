@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:tudo_em_casa/features/categories/data/models/index.dart';
 import 'package:tudo_em_casa/features/categories/data/providers/index.dart';
+import 'package:tudo_em_casa/features/categories/presentation/pages/index.dart';
 import 'package:tudo_em_casa/features/product_types/data/models/index.dart';
 import 'package:tudo_em_casa/features/product_types/presentation/viewmodels/index.dart';
 
@@ -17,7 +19,8 @@ class ProductTypeFormPage extends ConsumerStatefulWidget {
 class _ProductTypeFormPageState extends ConsumerState<ProductTypeFormPage> {
   late TextEditingController _nameController;
   late FocusNode _nameFocus;
-  late int _selectedCategoryId;
+  int? _selectedCategoryId;
+  CategoryModel? _selectedCategory;
   bool _isSubmitting = false;
 
   bool get _isEditMode => widget.productType != null;
@@ -28,7 +31,8 @@ class _ProductTypeFormPageState extends ConsumerState<ProductTypeFormPage> {
     _nameController = TextEditingController(
       text: _isEditMode ? widget.productType!.name : '',
     );
-    _selectedCategoryId = _isEditMode ? widget.productType!.categoryId : 0;
+    _selectedCategoryId = _isEditMode ? widget.productType!.categoryId : null;
+    _selectedCategory = _isEditMode ? widget.productType!.category : null;
     _nameFocus = FocusNode();
     WidgetsBinding.instance.addPostFrameCallback((_) {
       _nameFocus.requestFocus();
@@ -52,7 +56,7 @@ class _ProductTypeFormPageState extends ConsumerState<ProductTypeFormPage> {
       return;
     }
 
-    if (_selectedCategoryId == 0) {
+    if (_selectedCategoryId == null) {
       ScaffoldMessenger.of(
         context,
       ).showSnackBar(const SnackBar(content: Text('Category is required')));
@@ -70,7 +74,7 @@ class _ProductTypeFormPageState extends ConsumerState<ProductTypeFormPage> {
         );
         await viewModel.updateProductType(updatedProductType);
       } else {
-        await viewModel.createProductType(name, _selectedCategoryId);
+        await viewModel.createProductType(name, _selectedCategoryId!);
       }
       if (mounted) {
         Navigator.of(context).pop();
@@ -85,9 +89,48 @@ class _ProductTypeFormPageState extends ConsumerState<ProductTypeFormPage> {
     }
   }
 
+  Future<void> _selectCategory() async {
+    final selectedCategory = await Navigator.of(context).push<CategoryModel>(
+      MaterialPageRoute(
+        builder: (context) => CategoryListPage(
+          selectionMode: true,
+          selectionTitle: 'Select Category',
+          selectedCategoryId: _selectedCategoryId,
+        ),
+      ),
+    );
+
+    if (selectedCategory != null) {
+      setState(() {
+        _selectedCategory = selectedCategory;
+        _selectedCategoryId = selectedCategory.id;
+      });
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final categoriesAsync = ref.watch(watchAllCategoriesProvider);
+    final selectedCategoryFromList = categoriesAsync.maybeWhen(
+      data: (categories) {
+        if (_selectedCategory != null) {
+          return _selectedCategory;
+        }
+
+        if (_selectedCategoryId == null) {
+          return null;
+        }
+
+        for (final category in categories) {
+          if (category.id == _selectedCategoryId) {
+            return category;
+          }
+        }
+
+        return null;
+      },
+      orElse: () => _selectedCategory,
+    );
     final keyboardInset = MediaQuery.viewInsetsOf(context).bottom;
 
     return Scaffold(
@@ -101,10 +144,6 @@ class _ProductTypeFormPageState extends ConsumerState<ProductTypeFormPage> {
             return const Center(
               child: Text('No categories available. Create a category first.'),
             );
-          }
-
-          if (_selectedCategoryId == 0 && categories.isNotEmpty) {
-            _selectedCategoryId = categories.first.id;
           }
 
           return SafeArea(
@@ -127,31 +166,28 @@ class _ProductTypeFormPageState extends ConsumerState<ProductTypeFormPage> {
                     textInputAction: TextInputAction.next,
                   ),
                   const SizedBox(height: 16),
-                  DropdownButtonFormField<int>(
-                    initialValue: _selectedCategoryId,
-                    onChanged: _isSubmitting
-                        ? null
-                        : (value) {
-                            if (value != null) {
-                              setState(() {
-                                _selectedCategoryId = value;
-                              });
-                            }
-                          },
-                    decoration: InputDecoration(
-                      labelText: 'Category',
-                      border: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(8),
+                  InkWell(
+                    onTap: _isSubmitting ? null : _selectCategory,
+                    borderRadius: BorderRadius.circular(8),
+                    child: InputDecorator(
+                      decoration: InputDecoration(
+                        labelText: 'Category',
+                        border: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(8),
+                        ),
+                        suffixIcon: const Icon(Icons.chevron_right),
+                      ),
+                      child: Text(
+                        selectedCategoryFromList != null
+                            ? selectedCategoryFromList.name
+                            : 'Select category',
+                        style: selectedCategoryFromList != null
+                            ? null
+                            : Theme.of(context).textTheme.bodyMedium?.copyWith(
+                                color: Theme.of(context).hintColor,
+                              ),
                       ),
                     ),
-                    items: categories
-                        .map(
-                          (category) => DropdownMenuItem<int>(
-                            value: category.id,
-                            child: Text(category.name),
-                          ),
-                        )
-                        .toList(),
                   ),
                 ],
               ),

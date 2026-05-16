@@ -7,14 +7,25 @@ import 'package:tudo_em_casa/features/categories/presentation/viewmodels/index.d
 import 'package:tudo_em_casa/features/categories/presentation/widgets/index.dart';
 
 class CategoryListPage extends ConsumerWidget {
-  const CategoryListPage({super.key});
+  final bool selectionMode;
+  final String selectionTitle;
+  final int? selectedCategoryId;
+
+  const CategoryListPage({
+    super.key,
+    this.selectionMode = false,
+    this.selectionTitle = 'Select Category',
+    this.selectedCategoryId,
+  });
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final categoriesAsync = ref.watch(watchAllCategoriesProvider);
 
     return Scaffold(
-      appBar: AppBar(title: const Text('Categories')),
+      appBar: AppBar(
+        title: Text(selectionMode ? selectionTitle : 'Categories'),
+      ),
       body: categoriesAsync.when(
         data: (categories) {
           if (categories.isEmpty) {
@@ -29,6 +40,12 @@ class CategoryListPage extends ConsumerWidget {
               final category = categories[index];
               return CategoryItemWidget(
                 category: category,
+                selectable: selectionMode,
+                selected: category.id == selectedCategoryId,
+                onSelected: selectionMode
+                    ? (selectedCategory) =>
+                          Navigator.of(context).pop(selectedCategory)
+                    : null,
                 onEdit: () => _navigateToCategoryForm(context, category),
                 onDelete: () => _handleDeleteCategory(context, ref, category),
               );
@@ -64,7 +81,10 @@ class CategoryListPage extends ConsumerWidget {
     );
   }
 
-  void _navigateToCategoryForm(BuildContext context, [CategoryModel? category]) {
+  void _navigateToCategoryForm(
+    BuildContext context, [
+    CategoryModel? category,
+  ]) {
     Navigator.of(context).push(
       MaterialPageRoute(
         builder: (context) => CategoryFormPage(category: category),
@@ -82,7 +102,9 @@ class CategoryListPage extends ConsumerWidget {
       builder: (dialogContext) {
         return AlertDialog(
           title: const Text('Delete Category?'),
-          content: Text('Delete "${category.name}"? This action cannot be undone.'),
+          content: Text(
+            'Delete "${category.name}"? This action cannot be undone.',
+          ),
           actions: [
             TextButton(
               onPressed: () => Navigator.of(dialogContext).pop(),
@@ -97,7 +119,9 @@ class CategoryListPage extends ConsumerWidget {
                 } catch (error) {
                   if (context.mounted) {
                     ScaffoldMessenger.of(context).showSnackBar(
-                      SnackBar(content: Text('Error deleting category: $error')),
+                      SnackBar(
+                        content: Text('Error deleting category: $error'),
+                      ),
                     );
                   }
                 }
