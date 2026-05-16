@@ -43,12 +43,8 @@ class UnitListPage extends ConsumerWidget {
                 onSelected: selectionMode
                     ? (selectedUnit) => Navigator.of(context).pop(selectedUnit)
                     : null,
-                onEdit: selectionMode
-                    ? null
-                    : () => _navigateToUnitForm(context, unit),
-                onDelete: selectionMode
-                    ? null
-                    : () => _handleDeleteUnit(context, ref, unit),
+                onEdit: () => _navigateToUnitForm(context, unit),
+                onDelete: () => _handleDeleteUnit(context, ref, unit),
               );
             },
           );
@@ -74,13 +70,11 @@ class UnitListPage extends ConsumerWidget {
           ),
         ),
       ),
-      floatingActionButton: selectionMode
-          ? null
-          : FloatingActionButton(
-              onPressed: () => _navigateToUnitForm(context),
-              tooltip: 'Add Unit',
-              child: const Icon(Icons.add),
-            ),
+      floatingActionButton: FloatingActionButton(
+        onPressed: () => _navigateToUnitForm(context),
+        tooltip: 'Add Unit',
+        child: const Icon(Icons.add),
+      ),
     );
   }
 

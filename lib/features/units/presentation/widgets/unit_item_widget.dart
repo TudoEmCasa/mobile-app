@@ -24,29 +24,30 @@ class UnitItemWidget extends StatelessWidget {
     final colorScheme = Theme.of(context).colorScheme;
 
     return ListTile(
-      onTap: selectable ? () => onSelected?.call(unit) : null,
-      title: Text(unit.name),
-      subtitle: Text(unit.symbol),
-      trailing: selectable
+      onTap: selectable ? () => onSelected?.call(unit) : onEdit,
+      leading: selectable
           ? Icon(
               selected ? Icons.check_circle : Icons.radio_button_unchecked,
               color: selected ? colorScheme.primary : colorScheme.outline,
             )
-          : Row(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                IconButton(
-                  icon: const Icon(Icons.edit),
-                  onPressed: onEdit,
-                  tooltip: 'Edit',
-                ),
-                IconButton(
-                  icon: const Icon(Icons.delete),
-                  onPressed: onDelete,
-                  tooltip: 'Delete',
-                ),
-              ],
-            ),
+          : null,
+      title: Text(unit.name),
+      subtitle: Text(unit.symbol),
+      trailing: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          IconButton(
+            icon: const Icon(Icons.edit),
+            onPressed: onEdit,
+            tooltip: 'Edit',
+          ),
+          IconButton(
+            icon: const Icon(Icons.delete),
+            onPressed: onDelete,
+            tooltip: 'Delete',
+          ),
+        ],
+      ),
     );
   }
 }
