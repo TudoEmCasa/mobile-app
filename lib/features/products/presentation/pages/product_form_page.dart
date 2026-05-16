@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:tudo_em_casa/features/product_types/data/providers/product_type_repository_provider.dart';
+import 'package:tudo_em_casa/features/units/data/models/index.dart';
 import 'package:tudo_em_casa/features/units/data/providers/unit_repository_provider.dart';
+import 'package:tudo_em_casa/features/units/presentation/pages/index.dart';
 import 'package:tudo_em_casa/features/products/data/models/index.dart';
 import 'package:tudo_em_casa/features/products/presentation/viewmodels/product_list_viewmodel.dart';
 
@@ -19,6 +21,7 @@ class _ProductFormPageState extends ConsumerState<ProductFormPage> {
   late TextEditingController _quantityController;
   int? _selectedProductTypeId;
   int? _selectedUnitId;
+  UnitModel? _selectedUnit;
   DateTime? _expirationDate;
   bool _isSubmitting = false;
 
@@ -35,6 +38,7 @@ class _ProductFormPageState extends ConsumerState<ProductFormPage> {
     );
     _selectedProductTypeId = _isEditMode ? widget.product!.productTypeId : null;
     _selectedUnitId = _isEditMode ? widget.product!.unitId : null;
+    _selectedUnit = _isEditMode ? widget.product!.unit : null;
     _expirationDate = _isEditMode ? widget.product!.expirationDate : null;
   }
 
@@ -59,6 +63,25 @@ class _ProductFormPageState extends ConsumerState<ProductFormPage> {
       setState(
         () => _expirationDate = DateTime(picked.year, picked.month, picked.day),
       );
+    }
+  }
+
+  Future<void> _selectUnit() async {
+    final selectedUnit = await Navigator.of(context).push<UnitModel>(
+      MaterialPageRoute(
+        builder: (context) => UnitListPage(
+          selectionMode: true,
+          selectionTitle: 'Select Unit',
+          selectedUnitId: _selectedUnitId,
+        ),
+      ),
+    );
+
+    if (selectedUnit != null) {
+      setState(() {
+        _selectedUnit = selectedUnit;
+        _selectedUnitId = selectedUnit.id;
+      });
     }
   }
 
@@ -137,6 +160,26 @@ class _ProductFormPageState extends ConsumerState<ProductFormPage> {
 
     final productTypesAsync = ref.watch(watchAllProductTypesProvider);
     final unitsAsync = ref.watch(watchAllUnitsProvider);
+    final selectedUnitFromList = unitsAsync.maybeWhen(
+      data: (units) {
+        if (_selectedUnit != null) {
+          return _selectedUnit;
+        }
+
+        if (_selectedUnitId == null) {
+          return null;
+        }
+
+        for (final unit in units) {
+          if (unit.id == _selectedUnitId) {
+            return unit;
+          }
+        }
+
+        return null;
+      },
+      orElse: () => _selectedUnit,
+    );
 
     return Scaffold(
       resizeToAvoidBottomInset: true,
@@ -178,29 +221,30 @@ class _ProductFormPageState extends ConsumerState<ProductFormPage> {
                   ),
                   const SizedBox(width: 12),
                   Expanded(
-                    child: unitsAsync.when(
-                      data: (units) {
-                        return DropdownButtonFormField<int>(
-                          value: _selectedUnitId,
-                          decoration: InputDecoration(
-                            border: OutlineInputBorder(
-                              borderRadius: BorderRadius.circular(8),
-                            ),
+                    child: InkWell(
+                      onTap: _isSubmitting ? null : _selectUnit,
+                      borderRadius: BorderRadius.circular(8),
+                      child: InputDecorator(
+                        decoration: InputDecoration(
+                          labelText: 'Unit',
+                          border: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(8),
                           ),
-                          items: units
-                              .map(
-                                (u) => DropdownMenuItem(
-                                  value: u.id,
-                                  child: Text('${u.symbol} - ${u.name}'),
+                          suffixIcon: const Icon(Icons.chevron_right),
+                        ),
+                        child: Text(
+                          selectedUnitFromList != null
+                              ? '${selectedUnitFromList.symbol} - ${selectedUnitFromList.name}'
+                              : 'Select unit',
+                          style: selectedUnitFromList != null
+                              ? null
+                              : Theme.of(
+                                  context,
+                                ).textTheme.bodyMedium?.copyWith(
+                                  color: Theme.of(context).hintColor,
                                 ),
-                              )
-                              .toList(),
-                          onChanged: (v) => setState(() => _selectedUnitId = v),
-                          hint: const Text('Unit'),
-                        );
-                      },
-                      loading: () => const SizedBox(),
-                      error: (e, s) => const SizedBox(),
+                        ),
+                      ),
                     ),
                   ),
                 ],

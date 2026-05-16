@@ -7,14 +7,23 @@ import 'package:tudo_em_casa/features/units/presentation/viewmodels/index.dart';
 import 'package:tudo_em_casa/features/units/presentation/widgets/index.dart';
 
 class UnitListPage extends ConsumerWidget {
-  const UnitListPage({super.key});
+  final bool selectionMode;
+  final String selectionTitle;
+  final int? selectedUnitId;
+
+  const UnitListPage({
+    super.key,
+    this.selectionMode = false,
+    this.selectionTitle = 'Select Unit',
+    this.selectedUnitId,
+  });
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final unitsAsync = ref.watch(watchAllUnitsProvider);
 
     return Scaffold(
-      appBar: AppBar(title: const Text('Units')),
+      appBar: AppBar(title: Text(selectionMode ? selectionTitle : 'Units')),
       body: unitsAsync.when(
         data: (units) {
           if (units.isEmpty) {
@@ -29,8 +38,17 @@ class UnitListPage extends ConsumerWidget {
               final unit = units[index];
               return UnitItemWidget(
                 unit: unit,
-                onEdit: () => _navigateToUnitForm(context, unit),
-                onDelete: () => _handleDeleteUnit(context, ref, unit),
+                selectable: selectionMode,
+                selected: unit.id == selectedUnitId,
+                onSelected: selectionMode
+                    ? (selectedUnit) => Navigator.of(context).pop(selectedUnit)
+                    : null,
+                onEdit: selectionMode
+                    ? null
+                    : () => _navigateToUnitForm(context, unit),
+                onDelete: selectionMode
+                    ? null
+                    : () => _handleDeleteUnit(context, ref, unit),
               );
             },
           );
@@ -56,11 +74,13 @@ class UnitListPage extends ConsumerWidget {
           ),
         ),
       ),
-      floatingActionButton: FloatingActionButton(
-        onPressed: () => _navigateToUnitForm(context),
-        tooltip: 'Add Unit',
-        child: const Icon(Icons.add),
-      ),
+      floatingActionButton: selectionMode
+          ? null
+          : FloatingActionButton(
+              onPressed: () => _navigateToUnitForm(context),
+              tooltip: 'Add Unit',
+              child: const Icon(Icons.add),
+            ),
     );
   }
 
