@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:tudo_em_casa/core/utils/date_formatter.dart';
 import 'package:tudo_em_casa/features/product_types/data/models/index.dart';
 import 'package:tudo_em_casa/features/product_types/data/providers/product_type_repository_provider.dart';
 import 'package:tudo_em_casa/features/product_types/presentation/pages/index.dart';
@@ -325,7 +326,7 @@ class _ProductFormPageState extends ConsumerState<ProductFormPage> {
                       onPressed: _pickExpirationDate,
                       child: Text(
                         _expirationDate != null
-                            ? '${_expirationDate!.toLocal()}'.split(' ')[0]
+                            ? DateFormatter.formatDate(_expirationDate!)
                             : 'Select expiration date',
                       ),
                     ),

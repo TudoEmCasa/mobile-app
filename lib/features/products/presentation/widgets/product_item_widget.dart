@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:tudo_em_casa/core/utils/date_formatter.dart';
 import 'package:tudo_em_casa/features/products/data/models/product_model.dart';
 
 class ProductItemWidget extends StatelessWidget {
@@ -20,7 +21,7 @@ class ProductItemWidget extends StatelessWidget {
         : '${product.quantity}';
     final productTypeName = product.productType?.name ?? '';
     final expirationText = product.expirationDate != null
-        ? '${product.expirationDate!.toLocal()}'.split(' ')[0]
+        ? DateFormatter.formatDate(product.expirationDate!)
         : 'No expiration';
 
     return Card(
