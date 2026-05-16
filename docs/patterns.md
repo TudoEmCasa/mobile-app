@@ -434,3 +434,72 @@ Repositories should:
 # Scalability Goals
 
 This pattern must be used across the entire project to support future relational growth while avoiding duplicated models and maintenance complexity.
+
+---
+
+# Selection Page Pattern
+
+## Overview
+
+This project adopts a mobile-first selection pattern for relational entities.
+
+Instead of using dropdown selectors, the application uses dedicated selection pages.
+
+---
+
+## Motivation
+
+Dropdowns become difficult to use when:
+- datasets grow
+- mobile screens are small
+- keyboards are open
+- users need fast navigation
+
+Dedicated selection pages provide:
+- better scalability
+- better readability
+- easier future search support
+- cleaner forms
+- more consistent mobile UX
+
+---
+
+## Preferred Flow
+
+Form Page
+→ Open Selection Page
+→ User selects entity
+→ Return selected entity
+→ Populate form field
+
+---
+
+## Examples
+
+Used for:
+- Units selection
+- Product Types selection
+- Categories selection
+
+Future reusable pattern:
+- filters
+- export options
+- notification targets
+
+---
+
+## Implementation Guidelines
+
+Requirements:
+- reuse existing list pages when possible
+- support selection mode
+- preserve CRUD behavior
+- avoid duplicated list implementations
+- use Navigator push/pop flows
+- return selected models explicitly
+
+Avoid:
+- large dropdowns
+- modal selectors
+- duplicated selection screens
+- hidden selection behavior

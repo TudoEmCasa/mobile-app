@@ -401,3 +401,41 @@ Avoid:
 - duplicated relational models
 - flattened relationship fields
 - relationship-specific entity variants
+
+---
+
+## Selection UX Pattern
+
+Avoid large dropdown selectors for relational entities.
+
+Prefer dedicated selection pages instead of dropdowns when selecting:
+- categories
+- product types
+- units
+- relational entities
+
+Preferred flow:
+
+Form Page
+→ Navigate to Selection Page
+→ User selects item
+→ Return selected entity
+→ Populate form field
+
+Reasons:
+- better mobile UX
+- better scalability
+- cleaner forms
+- easier future search/filter implementation
+- more consistent navigation behavior
+
+Requirements:
+- selection pages must support reactive lists
+- selection mode must not break existing CRUD flows
+- avoid duplicated selection pages
+- prefer reusable list/select behavior
+
+Avoid:
+- giant dropdowns
+- deeply nested selectors
+- modal-based relational selection
