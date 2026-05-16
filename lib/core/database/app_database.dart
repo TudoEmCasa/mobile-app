@@ -4,11 +4,10 @@ import 'package:drift/drift.dart';
 import 'package:drift/native.dart';
 import 'package:path/path.dart' as p;
 import 'package:path_provider/path_provider.dart';
-
 import 'package:tudo_em_casa/core/database/tables/categories.dart';
 import 'package:tudo_em_casa/core/database/tables/product_types.dart';
-import 'package:tudo_em_casa/core/database/tables/units.dart';
 import 'package:tudo_em_casa/core/database/tables/products.dart';
+import 'package:tudo_em_casa/core/database/tables/units.dart';
 
 part 'app_database.g.dart';
 

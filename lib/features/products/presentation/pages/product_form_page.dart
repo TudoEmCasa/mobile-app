@@ -3,11 +3,11 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:tudo_em_casa/features/product_types/data/models/index.dart';
 import 'package:tudo_em_casa/features/product_types/data/providers/product_type_repository_provider.dart';
 import 'package:tudo_em_casa/features/product_types/presentation/pages/index.dart';
+import 'package:tudo_em_casa/features/products/data/models/index.dart';
+import 'package:tudo_em_casa/features/products/presentation/viewmodels/product_list_viewmodel.dart';
 import 'package:tudo_em_casa/features/units/data/models/index.dart';
 import 'package:tudo_em_casa/features/units/data/providers/unit_repository_provider.dart';
 import 'package:tudo_em_casa/features/units/presentation/pages/index.dart';
-import 'package:tudo_em_casa/features/products/data/models/index.dart';
-import 'package:tudo_em_casa/features/products/presentation/viewmodels/product_list_viewmodel.dart';
 
 class ProductFormPage extends ConsumerStatefulWidget {
   final ProductModel? product;
@@ -252,7 +252,7 @@ class _ProductFormPageState extends ConsumerState<ProductFormPage> {
                   Expanded(
                     child: TextField(
                       controller: _quantityController,
-                      keyboardType: TextInputType.numberWithOptions(
+                      keyboardType: const TextInputType.numberWithOptions(
                         decimal: true,
                       ),
                       decoration: InputDecoration(

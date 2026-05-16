@@ -1,9 +1,9 @@
 import 'package:drift/drift.dart';
 import 'package:tudo_em_casa/core/database/app_database.dart';
-import 'package:tudo_em_casa/features/product_types/data/models/product_type_model.dart';
 import 'package:tudo_em_casa/features/categories/data/models/category_model.dart';
-import 'package:tudo_em_casa/features/units/data/models/unit_model.dart';
+import 'package:tudo_em_casa/features/product_types/data/models/product_type_model.dart';
 import 'package:tudo_em_casa/features/products/data/models/index.dart';
+import 'package:tudo_em_casa/features/units/data/models/unit_model.dart';
 
 class ProductRepository {
   final AppDatabase _db;

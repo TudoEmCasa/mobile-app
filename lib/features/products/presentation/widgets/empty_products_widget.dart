@@ -20,7 +20,7 @@ class EmptyProductsWidget extends StatelessWidget {
               style: Theme.of(context).textTheme.titleLarge,
             ),
             const SizedBox(height: 8),
-            Text(
+            const Text(
               'Add your first product to start tracking your stock.',
               textAlign: TextAlign.center,
             ),

@@ -3,9 +3,9 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:tudo_em_casa/core/database/app_database.dart';
 import 'package:tudo_em_casa/features/categories/data/repositories/category_repository.dart';
 import 'package:tudo_em_casa/features/product_types/data/repositories/product_type_repository.dart';
-import 'package:tudo_em_casa/features/units/data/repositories/unit_repository.dart';
 import 'package:tudo_em_casa/features/products/data/models/index.dart';
 import 'package:tudo_em_casa/features/products/data/repositories/product_repository.dart';
+import 'package:tudo_em_casa/features/units/data/repositories/unit_repository.dart';
 
 void main() {
   late AppDatabase db;
