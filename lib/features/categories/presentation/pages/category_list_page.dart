@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:tudo_em_casa/core/feedback/app_snackbar.dart';
 import 'package:tudo_em_casa/core/feedback/load_error_feedback_mixin.dart';
+import 'package:tudo_em_casa/core/widgets/app_confirmation_bottom_sheet.dart';
 import 'package:tudo_em_casa/features/categories/data/models/index.dart';
 import 'package:tudo_em_casa/features/categories/data/providers/index.dart';
 import 'package:tudo_em_casa/features/categories/presentation/pages/category_form_page.dart';
@@ -109,44 +110,34 @@ class _CategoryListPageState extends ConsumerState<CategoryListPage>
     }
   }
 
-  void _handleDeleteCategory(
+  Future<void> _handleDeleteCategory(
     BuildContext context,
     WidgetRef ref,
     CategoryModel category,
-  ) {
-    showDialog<void>(
+  ) async {
+    final shouldDelete = await showAppConfirmationBottomSheet(
       context: context,
-      builder: (dialogContext) {
-        return AlertDialog(
-          title: const Text('Delete Category?'),
-          content: Text(
-            'Delete "${category.name}"? This action cannot be undone.',
-          ),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.of(dialogContext).pop(),
-              child: const Text('Cancel'),
-            ),
-            TextButton(
-              onPressed: () async {
-                Navigator.of(dialogContext).pop();
-                try {
-                  final viewModel = ref.read(categoryListViewModelProvider);
-                  await viewModel.deleteCategory(category.id);
-                  if (context.mounted) {
-                    AppSnackbar.success(context, 'Category removed');
-                  }
-                } catch (error) {
-                  if (context.mounted) {
-                    AppSnackbar.error(context, 'Failed to delete category');
-                  }
-                }
-              },
-              child: const Text('Delete', style: TextStyle(color: Colors.red)),
-            ),
-          ],
-        );
-      },
+      title: 'Delete Category?',
+      message: 'Delete "${category.name}"? This action cannot be undone.',
+      confirmLabel: 'Delete',
+      cancelLabel: 'Cancel',
+      isDangerous: true,
     );
+
+    if (!shouldDelete || !context.mounted) {
+      return;
+    }
+
+    try {
+      final viewModel = ref.read(categoryListViewModelProvider);
+      await viewModel.deleteCategory(category.id);
+      if (context.mounted) {
+        AppSnackbar.success(context, 'Category removed');
+      }
+    } catch (error) {
+      if (context.mounted) {
+        AppSnackbar.error(context, 'Failed to delete category');
+      }
+    }
   }
 }

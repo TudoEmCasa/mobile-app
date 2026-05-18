@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:tudo_em_casa/core/feedback/app_snackbar.dart';
 import 'package:tudo_em_casa/core/feedback/load_error_feedback_mixin.dart';
+import 'package:tudo_em_casa/core/widgets/app_confirmation_bottom_sheet.dart';
 import 'package:tudo_em_casa/features/product_types/data/models/index.dart';
 import 'package:tudo_em_casa/features/product_types/presentation/pages/product_type_form_page.dart';
 import 'package:tudo_em_casa/features/product_types/presentation/viewmodels/index.dart';
@@ -110,44 +111,34 @@ class _ProductTypeListPageState extends ConsumerState<ProductTypeListPage>
     }
   }
 
-  void _handleDeleteProductType(
+  Future<void> _handleDeleteProductType(
     BuildContext context,
     WidgetRef ref,
     ProductTypeModel productType,
-  ) {
-    showDialog<void>(
+  ) async {
+    final shouldDelete = await showAppConfirmationBottomSheet(
       context: context,
-      builder: (dialogContext) {
-        return AlertDialog(
-          title: const Text('Delete Product Type?'),
-          content: Text(
-            'Delete "${productType.name}"? This action cannot be undone.',
-          ),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.of(dialogContext).pop(),
-              child: const Text('Cancel'),
-            ),
-            TextButton(
-              onPressed: () async {
-                Navigator.of(dialogContext).pop();
-                try {
-                  final viewModel = ref.read(productTypeListViewModelProvider);
-                  await viewModel.deleteProductType(productType.id);
-                  if (context.mounted) {
-                    AppSnackbar.success(context, 'Product type removed');
-                  }
-                } catch (error) {
-                  if (context.mounted) {
-                    AppSnackbar.error(context, 'Failed to delete product type');
-                  }
-                }
-              },
-              child: const Text('Delete', style: TextStyle(color: Colors.red)),
-            ),
-          ],
-        );
-      },
+      title: 'Delete Product Type?',
+      message: 'Delete "${productType.name}"? This action cannot be undone.',
+      confirmLabel: 'Delete',
+      cancelLabel: 'Cancel',
+      isDangerous: true,
     );
+
+    if (!shouldDelete || !context.mounted) {
+      return;
+    }
+
+    try {
+      final viewModel = ref.read(productTypeListViewModelProvider);
+      await viewModel.deleteProductType(productType.id);
+      if (context.mounted) {
+        AppSnackbar.success(context, 'Product type removed');
+      }
+    } catch (error) {
+      if (context.mounted) {
+        AppSnackbar.error(context, 'Failed to delete product type');
+      }
+    }
   }
 }

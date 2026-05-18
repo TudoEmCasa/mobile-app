@@ -3,36 +3,11 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:tudo_em_casa/core/feedback/app_snackbar.dart';
 import 'package:tudo_em_casa/core/services/import/data_import_service.dart';
 import 'package:tudo_em_casa/core/theme/theme_mode_provider.dart';
+import 'package:tudo_em_casa/core/widgets/app_confirmation_bottom_sheet.dart';
 import 'package:tudo_em_casa/features/settings/presentation/viewmodels/settings_viewmodel.dart';
 
 class SettingsPage extends ConsumerWidget {
   const SettingsPage({super.key});
-
-  Future<bool> _showImportConfirmationDialog(BuildContext context) async {
-    final shouldImport = await showDialog<bool>(
-      context: context,
-      builder: (context) {
-        return AlertDialog(
-          title: const Text('Import Data'),
-          content: const Text(
-            'Importing a backup will replace current local data.',
-          ),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.of(context).pop(false),
-              child: const Text('Cancel'),
-            ),
-            FilledButton(
-              onPressed: () => Navigator.of(context).pop(true),
-              child: const Text('Import'),
-            ),
-          ],
-        );
-      },
-    );
-
-    return shouldImport ?? false;
-  }
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -119,7 +94,15 @@ class SettingsPage extends ConsumerWidget {
                               }
 
                               final shouldImport =
-                                  await _showImportConfirmationDialog(context);
+                                  await showAppConfirmationBottomSheet(
+                                    context: context,
+                                    title: 'Import Data',
+                                    message:
+                                        'Importing a backup will replace current local data.',
+                                    confirmLabel: 'Import',
+                                    cancelLabel: 'Cancel',
+                                    isDangerous: true,
+                                  );
 
                               if (!context.mounted) {
                                 return;

@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:tudo_em_casa/core/feedback/app_snackbar.dart';
 import 'package:tudo_em_casa/core/feedback/load_error_feedback_mixin.dart';
+import 'package:tudo_em_casa/core/widgets/app_confirmation_bottom_sheet.dart';
 import 'package:tudo_em_casa/features/products/data/models/index.dart';
 import 'package:tudo_em_casa/features/products/data/providers/product_repository_provider.dart';
 import 'package:tudo_em_casa/features/products/presentation/pages/product_form_page.dart';
@@ -90,44 +91,34 @@ class _ProductListPageState extends ConsumerState<ProductListPage>
     );
   }
 
-  void _handleDelete(
+  Future<void> _handleDelete(
     BuildContext context,
     WidgetRef ref,
     ProductModel product,
-  ) {
-    showDialog<void>(
+  ) async {
+    final shouldDelete = await showAppConfirmationBottomSheet(
       context: context,
-      builder: (dialogContext) {
-        return AlertDialog(
-          title: const Text('Delete Product?'),
-          content: Text(
-            'Delete "${product.name}"? This action cannot be undone.',
-          ),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.of(dialogContext).pop(),
-              child: const Text('Cancel'),
-            ),
-            TextButton(
-              onPressed: () async {
-                Navigator.of(dialogContext).pop();
-                try {
-                  final viewModel = ref.read(productListViewModelProvider);
-                  await viewModel.deleteProduct(product.id);
-                  if (context.mounted) {
-                    AppSnackbar.success(context, 'Product removed');
-                  }
-                } catch (error) {
-                  if (context.mounted) {
-                    AppSnackbar.error(context, 'Failed to delete product');
-                  }
-                }
-              },
-              child: const Text('Delete', style: TextStyle(color: Colors.red)),
-            ),
-          ],
-        );
-      },
+      title: 'Delete Product?',
+      message: 'Delete "${product.name}"? This action cannot be undone.',
+      confirmLabel: 'Delete',
+      cancelLabel: 'Cancel',
+      isDangerous: true,
     );
+
+    if (!shouldDelete || !context.mounted) {
+      return;
+    }
+
+    try {
+      final viewModel = ref.read(productListViewModelProvider);
+      await viewModel.deleteProduct(product.id);
+      if (context.mounted) {
+        AppSnackbar.success(context, 'Product removed');
+      }
+    } catch (error) {
+      if (context.mounted) {
+        AppSnackbar.error(context, 'Failed to delete product');
+      }
+    }
   }
 }

@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:tudo_em_casa/core/feedback/app_snackbar.dart';
 import 'package:tudo_em_casa/core/feedback/load_error_feedback_mixin.dart';
+import 'package:tudo_em_casa/core/widgets/app_confirmation_bottom_sheet.dart';
 import 'package:tudo_em_casa/features/units/data/models/index.dart';
 import 'package:tudo_em_casa/features/units/data/providers/index.dart';
 import 'package:tudo_em_casa/features/units/presentation/pages/unit_form_page.dart';
@@ -104,38 +105,34 @@ class _UnitListPageState extends ConsumerState<UnitListPage>
     }
   }
 
-  void _handleDeleteUnit(BuildContext context, WidgetRef ref, UnitModel unit) {
-    showDialog<void>(
+  Future<void> _handleDeleteUnit(
+    BuildContext context,
+    WidgetRef ref,
+    UnitModel unit,
+  ) async {
+    final shouldDelete = await showAppConfirmationBottomSheet(
       context: context,
-      builder: (dialogContext) {
-        return AlertDialog(
-          title: const Text('Delete Unit?'),
-          content: Text('Delete "${unit.name}"? This action cannot be undone.'),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.of(dialogContext).pop(),
-              child: const Text('Cancel'),
-            ),
-            TextButton(
-              onPressed: () async {
-                Navigator.of(dialogContext).pop();
-                try {
-                  final viewModel = ref.read(unitListViewModelProvider);
-                  await viewModel.deleteUnit(unit.id);
-                  if (context.mounted) {
-                    AppSnackbar.success(context, 'Unit removed');
-                  }
-                } catch (error) {
-                  if (context.mounted) {
-                    AppSnackbar.error(context, 'Failed to delete unit');
-                  }
-                }
-              },
-              child: const Text('Delete', style: TextStyle(color: Colors.red)),
-            ),
-          ],
-        );
-      },
+      title: 'Delete Unit?',
+      message: 'Delete "${unit.name}"? This action cannot be undone.',
+      confirmLabel: 'Delete',
+      cancelLabel: 'Cancel',
+      isDangerous: true,
     );
+
+    if (!shouldDelete || !context.mounted) {
+      return;
+    }
+
+    try {
+      final viewModel = ref.read(unitListViewModelProvider);
+      await viewModel.deleteUnit(unit.id);
+      if (context.mounted) {
+        AppSnackbar.success(context, 'Unit removed');
+      }
+    } catch (error) {
+      if (context.mounted) {
+        AppSnackbar.error(context, 'Failed to delete unit');
+      }
+    }
   }
 }
