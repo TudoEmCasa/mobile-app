@@ -13,12 +13,14 @@ void main() {
     throw StateError('Could not decode $iconPath.');
   }
 
-  final normalizedImage = img.copyResize(
-    decodedImage,
-    width: 1024,
-    height: 1024,
-    interpolation: img.Interpolation.cubic,
-  );
+  final normalizedImage = img
+      .copyResize(
+        decodedImage,
+        width: 1024,
+        height: 1024,
+        interpolation: img.Interpolation.cubic,
+      )
+      .convert(numChannels: 4, withPalette: false);
 
   iconFile.writeAsBytesSync(img.encodePng(normalizedImage));
   stdout.writeln('Normalized $iconPath to a 1024x1024 PNG.');
