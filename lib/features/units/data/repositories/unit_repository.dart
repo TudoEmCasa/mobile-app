@@ -29,6 +29,24 @@ class UnitRepository {
     return units.map(UnitModel.fromDrift).toList();
   }
 
+  Future<void> clearUnits() async {
+    await _db.delete(_db.units).go();
+  }
+
+  Future<void> insertUnits(List<UnitModel> units) async {
+    if (units.isEmpty) {
+      return;
+    }
+
+    final companions = units.map((unit) {
+      return unit.toCompanion();
+    }).toList();
+
+    await _db.batch((batch) {
+      batch.insertAll(_db.units, companions);
+    });
+  }
+
   Stream<UnitModel?> watchUnitById(int id) {
     final query = _db.select(_db.units)..where((t) => t.id.equals(id));
 

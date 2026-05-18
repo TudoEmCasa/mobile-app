@@ -54,6 +54,24 @@ class ProductTypeRepository {
     }).toList();
   }
 
+  Future<void> clearProductTypes() async {
+    await _db.delete(_db.productTypes).go();
+  }
+
+  Future<void> insertProductTypes(List<ProductTypeModel> productTypes) async {
+    if (productTypes.isEmpty) {
+      return;
+    }
+
+    final companions = productTypes.map((productType) {
+      return productType.toCompanion();
+    }).toList();
+
+    await _db.batch((batch) {
+      batch.insertAll(_db.productTypes, companions);
+    });
+  }
+
   Stream<ProductTypeModel?> watchProductTypeById(int id) {
     final query = _db.select(_db.productTypes)..where((t) => t.id.equals(id));
 

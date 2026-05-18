@@ -87,6 +87,24 @@ class ProductRepository {
     return products.map(ProductModel.fromDrift).toList();
   }
 
+  Future<void> clearProducts() async {
+    await _db.delete(_db.products).go();
+  }
+
+  Future<void> insertProducts(List<ProductModel> products) async {
+    if (products.isEmpty) {
+      return;
+    }
+
+    final companions = products.map((product) {
+      return product.toCompanion();
+    }).toList();
+
+    await _db.batch((batch) {
+      batch.insertAll(_db.products, companions);
+    });
+  }
+
   Stream<ProductModel?> watchProductById(int id) {
     final query = _db.select(_db.products)..where((t) => t.id.equals(id));
 

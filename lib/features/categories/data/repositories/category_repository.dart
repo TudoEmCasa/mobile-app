@@ -30,6 +30,24 @@ class CategoryRepository {
     return categories.map(CategoryModel.fromDrift).toList();
   }
 
+  Future<void> clearCategories() async {
+    await _db.delete(_db.categories).go();
+  }
+
+  Future<void> insertCategories(List<CategoryModel> categories) async {
+    if (categories.isEmpty) {
+      return;
+    }
+
+    final companions = categories.map((category) {
+      return category.toCompanion();
+    }).toList();
+
+    await _db.batch((batch) {
+      batch.insertAll(_db.categories, companions);
+    });
+  }
+
   Stream<CategoryModel?> watchCategoryById(int id) {
     final query = _db.select(_db.categories)..where((t) => t.id.equals(id));
 
