@@ -20,6 +20,16 @@ class CategoryRepository {
     return category != null ? CategoryModel.fromDrift(category) : null;
   }
 
+  Future<List<CategoryModel>> getCategories() async {
+    final query = (_db.select(_db.categories)
+      ..orderBy([
+        (t) => OrderingTerm(expression: t.name, mode: OrderingMode.asc),
+      ]));
+    final categories = await query.get();
+
+    return categories.map(CategoryModel.fromDrift).toList();
+  }
+
   Stream<CategoryModel?> watchCategoryById(int id) {
     final query = _db.select(_db.categories)..where((t) => t.id.equals(id));
 

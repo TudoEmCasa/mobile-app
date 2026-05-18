@@ -19,6 +19,16 @@ class UnitRepository {
     return unit != null ? UnitModel.fromDrift(unit) : null;
   }
 
+  Future<List<UnitModel>> getUnits() async {
+    final query = (_db.select(_db.units)
+      ..orderBy([
+        (t) => OrderingTerm(expression: t.name, mode: OrderingMode.asc),
+      ]));
+    final units = await query.get();
+
+    return units.map(UnitModel.fromDrift).toList();
+  }
+
   Stream<UnitModel?> watchUnitById(int id) {
     final query = _db.select(_db.units)..where((t) => t.id.equals(id));
 

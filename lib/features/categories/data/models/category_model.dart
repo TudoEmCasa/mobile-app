@@ -16,6 +16,17 @@ class CategoryModel {
     return CategoryModel(id: category.id, name: category.name);
   }
 
+  factory CategoryModel.fromJson(Map<String, Object?> json) {
+    return CategoryModel(
+      id: (json['id'] as num).toInt(),
+      name: json['name'] as String,
+    );
+  }
+
+  Map<String, Object?> toJson() {
+    return {'id': id, 'name': name};
+  }
+
   CategoriesCompanion toCompanion({bool insertingNew = false}) {
     return CategoriesCompanion(
       id: insertingNew ? const Value.absent() : Value(id),

@@ -35,6 +35,26 @@ class ProductTypeModel {
     );
   }
 
+  factory ProductTypeModel.fromJson(Map<String, Object?> json) {
+    return ProductTypeModel(
+      id: (json['id'] as num).toInt(),
+      name: json['name'] as String,
+      categoryId: (json['categoryId'] as num).toInt(),
+      category: json['category'] is Map<String, Object?>
+          ? CategoryModel.fromJson(json['category'] as Map<String, Object?>)
+          : null,
+    );
+  }
+
+  Map<String, Object?> toJson() {
+    return {
+      'id': id,
+      'name': name,
+      'categoryId': categoryId,
+      if (category != null) 'category': category!.toJson(),
+    };
+  }
+
   ProductTypesCompanion toCompanion({bool insertingNew = false}) {
     return ProductTypesCompanion(
       id: insertingNew ? const Value.absent() : Value(id),

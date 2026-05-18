@@ -59,6 +59,42 @@ class ProductModel {
     );
   }
 
+  factory ProductModel.fromJson(Map<String, Object?> json) {
+    return ProductModel(
+      id: (json['id'] as num).toInt(),
+      name: json['name'] as String,
+      productTypeId: (json['productTypeId'] as num).toInt(),
+      unitId: (json['unitId'] as num).toInt(),
+      quantity: (json['quantity'] as num).toDouble(),
+      expirationDate: json['expirationDate'] == null
+          ? null
+          : DateTime.parse(json['expirationDate'] as String),
+      createdAt: DateTime.parse(json['createdAt'] as String),
+      productType: json['productType'] is Map<String, Object?>
+          ? ProductTypeModel.fromJson(
+              json['productType'] as Map<String, Object?>,
+            )
+          : null,
+      unit: json['unit'] is Map<String, Object?>
+          ? UnitModel.fromJson(json['unit'] as Map<String, Object?>)
+          : null,
+    );
+  }
+
+  Map<String, Object?> toJson() {
+    return {
+      'id': id,
+      'name': name,
+      'productTypeId': productTypeId,
+      'unitId': unitId,
+      'quantity': quantity,
+      'expirationDate': expirationDate?.toIso8601String(),
+      'createdAt': createdAt.toIso8601String(),
+      if (productType != null) 'productType': productType!.toJson(),
+      if (unit != null) 'unit': unit!.toJson(),
+    };
+  }
+
   ProductsCompanion toCompanion({bool insertingNew = false}) {
     return ProductsCompanion(
       id: insertingNew ? const Value.absent() : Value(id),

@@ -16,6 +16,18 @@ class UnitModel {
     return UnitModel(id: unit.id, name: unit.name, symbol: unit.symbol);
   }
 
+  factory UnitModel.fromJson(Map<String, Object?> json) {
+    return UnitModel(
+      id: (json['id'] as num).toInt(),
+      name: json['name'] as String,
+      symbol: json['symbol'] as String,
+    );
+  }
+
+  Map<String, Object?> toJson() {
+    return {'id': id, 'name': name, 'symbol': symbol};
+  }
+
   UnitsCompanion toCompanion({bool insertingNew = false}) {
     return UnitsCompanion(
       id: insertingNew ? const Value.absent() : Value(id),

@@ -77,6 +77,16 @@ class ProductRepository {
     );
   }
 
+  Future<List<ProductModel>> getProducts() async {
+    final query = (_db.select(_db.products)
+      ..orderBy([
+        (t) => OrderingTerm(expression: t.name, mode: OrderingMode.asc),
+      ]));
+    final products = await query.get();
+
+    return products.map(ProductModel.fromDrift).toList();
+  }
+
   Stream<ProductModel?> watchProductById(int id) {
     final query = _db.select(_db.products)..where((t) => t.id.equals(id));
 
