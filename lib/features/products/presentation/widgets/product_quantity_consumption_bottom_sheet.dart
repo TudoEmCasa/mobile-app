@@ -157,6 +157,9 @@ class _ProductQuantityConsumptionSheetState
     final bottomInset = MediaQuery.viewInsetsOf(context).bottom;
     final remainingQuantity = _remainingQuantity;
     final quantityErrorText = _quantityErrorText;
+    final remainingPreviewText = remainingQuantity != null
+        ? 'Remaining: ${_formatQuantity(remainingQuantity)} ${_unitLabel(remainingQuantity)}'
+        : 'Remaining: --';
 
     return AnimatedPadding(
       duration: const Duration(milliseconds: 160),
@@ -226,13 +229,9 @@ class _ProductQuantityConsumptionSheetState
                 ),
                 const SizedBox(height: 10),
                 Text(
-                  quantityErrorText == null && remainingQuantity != null
-                      ? 'Remaining: ${_formatQuantity(remainingQuantity)} ${_unitLabel(remainingQuantity)}'
-                      : quantityErrorText ?? 'Enter a quantity',
+                  remainingPreviewText,
                   style: theme.textTheme.bodySmall?.copyWith(
-                    color: quantityErrorText == null
-                        ? theme.colorScheme.onSurfaceVariant
-                        : theme.colorScheme.error,
+                    color: theme.colorScheme.onSurfaceVariant,
                   ),
                 ),
                 const SizedBox(height: 14),
