@@ -240,6 +240,38 @@ class ProductRepository {
     });
   }
 
+  Future<ProductModel> addProductQuantity({
+    required int productId,
+    required double quantity,
+  }) async {
+    if (!quantity.isFinite || quantity <= 0) {
+      throw const ProductQuantityConsumptionException(
+        'Quantity must be greater than zero',
+      );
+    }
+
+    return _db.transaction(() async {
+      final currentProduct = await getProductById(productId);
+
+      if (currentProduct == null) {
+        throw const ProductQuantityConsumptionException('Product not found');
+      }
+
+      final updatedQuantity = currentProduct.quantity + quantity;
+
+      await (_db.update(_db.products)..where((t) => t.id.equals(productId)))
+          .write(ProductsCompanion(quantity: Value(updatedQuantity)));
+
+      final updatedProduct = await getProductById(productId);
+
+      if (updatedProduct == null) {
+        throw const ProductQuantityConsumptionException('Product not found');
+      }
+
+      return updatedProduct;
+    });
+  }
+
   Future<bool> deleteProduct(int id) async {
     await (_db.delete(_db.products)..where((t) => t.id.equals(id))).go();
 

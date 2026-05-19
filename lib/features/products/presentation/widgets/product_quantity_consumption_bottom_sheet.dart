@@ -1,9 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:tudo_em_casa/features/products/data/models/product_model.dart';
 
-Future<double?> showProductQuantityConsumptionBottomSheet({
+enum ProductQuantityAdjustmentMode { add, consume }
+
+Future<double?> showProductQuantityAdjustmentBottomSheet({
   required BuildContext context,
   required ProductModel product,
+  required ProductQuantityAdjustmentMode mode,
 }) async {
   return showModalBottomSheet<double>(
     context: context,
@@ -15,23 +18,38 @@ Future<double?> showProductQuantityConsumptionBottomSheet({
       borderRadius: BorderRadius.vertical(top: Radius.circular(28)),
     ),
     builder: (context) {
-      return _ProductQuantityConsumptionSheet(product: product);
+      return _ProductQuantityAdjustmentSheet(product: product, mode: mode);
     },
   );
 }
 
-class _ProductQuantityConsumptionSheet extends StatefulWidget {
-  final ProductModel product;
-
-  const _ProductQuantityConsumptionSheet({required this.product});
-
-  @override
-  State<_ProductQuantityConsumptionSheet> createState() =>
-      _ProductQuantityConsumptionSheetState();
+Future<double?> showProductQuantityConsumptionBottomSheet({
+  required BuildContext context,
+  required ProductModel product,
+}) {
+  return showProductQuantityAdjustmentBottomSheet(
+    context: context,
+    product: product,
+    mode: ProductQuantityAdjustmentMode.consume,
+  );
 }
 
-class _ProductQuantityConsumptionSheetState
-    extends State<_ProductQuantityConsumptionSheet> {
+class _ProductQuantityAdjustmentSheet extends StatefulWidget {
+  final ProductModel product;
+  final ProductQuantityAdjustmentMode mode;
+
+  const _ProductQuantityAdjustmentSheet({
+    required this.product,
+    required this.mode,
+  });
+
+  @override
+  State<_ProductQuantityAdjustmentSheet> createState() =>
+      _ProductQuantityAdjustmentSheetState();
+}
+
+class _ProductQuantityAdjustmentSheetState
+    extends State<_ProductQuantityAdjustmentSheet> {
   late final TextEditingController _quantityController;
 
   @override
@@ -85,26 +103,51 @@ class _ProductQuantityConsumptionSheetState
       return 'Quantity must be greater than zero';
     }
 
-    if (quantity > widget.product.quantity) {
+    if (widget.mode == ProductQuantityAdjustmentMode.consume &&
+        quantity > widget.product.quantity) {
       return 'Insufficient quantity';
     }
 
     return null;
   }
 
-  double? get _remainingQuantity {
+  double? get _previewQuantity {
     final enteredQuantity = _enteredQuantity;
 
     if (enteredQuantity == null) {
       return null;
     }
 
-    return widget.product.quantity - enteredQuantity;
+    return widget.mode == ProductQuantityAdjustmentMode.consume
+        ? widget.product.quantity - enteredQuantity
+        : widget.product.quantity + enteredQuantity;
   }
 
   bool get _canConfirm => _quantityErrorText == null;
 
+  String get _title {
+    return widget.mode == ProductQuantityAdjustmentMode.consume
+        ? 'Consume quantity'
+        : 'Add quantity';
+  }
+
+  String get _quantityLabel {
+    return widget.mode == ProductQuantityAdjustmentMode.consume
+        ? 'Quantity to use'
+        : 'Quantity to add';
+  }
+
+  String get _previewLabel {
+    return widget.mode == ProductQuantityAdjustmentMode.consume
+        ? 'Remaining'
+        : 'New total';
+  }
+
   void _useAllQuantity() {
+    if (widget.mode != ProductQuantityAdjustmentMode.consume) {
+      return;
+    }
+
     final quantityText = _formatQuantity(widget.product.quantity);
 
     _quantityController.value = TextEditingValue(
@@ -155,11 +198,8 @@ class _ProductQuantityConsumptionSheetState
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final bottomInset = MediaQuery.viewInsetsOf(context).bottom;
-    final remainingQuantity = _remainingQuantity;
+    final previewQuantity = _previewQuantity;
     final quantityErrorText = _quantityErrorText;
-    final remainingPreviewText = remainingQuantity != null
-        ? 'Remaining: ${_formatQuantity(remainingQuantity)} ${_unitLabel(remainingQuantity)}'
-        : 'Remaining: --';
 
     return AnimatedPadding(
       duration: const Duration(milliseconds: 160),
@@ -186,7 +226,9 @@ class _ProductQuantityConsumptionSheetState
                   ),
                 ),
                 const SizedBox(height: 12),
-                Text(widget.product.name, style: theme.textTheme.titleMedium),
+                Text(_title, style: theme.textTheme.titleMedium),
+                const SizedBox(height: 4),
+                Text(widget.product.name, style: theme.textTheme.titleLarge),
                 const SizedBox(height: 4),
                 Text(
                   'Current: ${_formatQuantity(widget.product.quantity)} ${_unitLabel(widget.product.quantity)}',
@@ -201,7 +243,7 @@ class _ProductQuantityConsumptionSheetState
                   ),
                   textInputAction: TextInputAction.done,
                   decoration: InputDecoration(
-                    labelText: 'Quantity to use',
+                    labelText: _quantityLabel,
                     errorText: quantityErrorText,
                     border: OutlineInputBorder(
                       borderRadius: BorderRadius.circular(12),
@@ -210,26 +252,33 @@ class _ProductQuantityConsumptionSheetState
                       minWidth: 0,
                       minHeight: 0,
                     ),
-                    suffixIcon: Padding(
-                      padding: const EdgeInsets.only(right: 8),
-                      child: TextButton(
-                        onPressed: widget.product.quantity > 0
-                            ? _useAllQuantity
-                            : null,
-                        style: TextButton.styleFrom(
-                          visualDensity: VisualDensity.compact,
-                          padding: const EdgeInsets.symmetric(horizontal: 8),
-                          minimumSize: const Size(0, 36),
-                          tapTargetSize: MaterialTapTargetSize.shrinkWrap,
-                        ),
-                        child: const Text('Use all'),
-                      ),
-                    ),
+                    suffixIcon:
+                        widget.mode == ProductQuantityAdjustmentMode.consume
+                        ? Padding(
+                            padding: const EdgeInsets.only(right: 8),
+                            child: TextButton(
+                              onPressed: widget.product.quantity > 0
+                                  ? _useAllQuantity
+                                  : null,
+                              style: TextButton.styleFrom(
+                                visualDensity: VisualDensity.compact,
+                                padding: const EdgeInsets.symmetric(
+                                  horizontal: 8,
+                                ),
+                                minimumSize: const Size(0, 36),
+                                tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                              ),
+                              child: const Text('Use all'),
+                            ),
+                          )
+                        : null,
                   ),
                 ),
                 const SizedBox(height: 10),
                 Text(
-                  remainingPreviewText,
+                  previewQuantity != null
+                      ? '$_previewLabel: ${_formatQuantity(previewQuantity)} ${_unitLabel(previewQuantity)}'
+                      : '$_previewLabel: --',
                   style: theme.textTheme.bodySmall?.copyWith(
                     color: theme.colorScheme.onSurfaceVariant,
                   ),

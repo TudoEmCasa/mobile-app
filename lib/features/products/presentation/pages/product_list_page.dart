@@ -59,6 +59,7 @@ class _ProductListPageState extends ConsumerState<ProductListPage>
               final product = products[index];
               return ProductItemWidget(
                 product: product,
+                onAdd: () => _handleAddQuantity(context, ref, product),
                 onUse: () => _handleUseQuantity(context, ref, product),
                 onEdit: () => widget._navigateToForm(context, product),
                 onDelete: () => _handleDelete(context, ref, product),
@@ -129,9 +130,10 @@ class _ProductListPageState extends ConsumerState<ProductListPage>
     WidgetRef ref,
     ProductModel product,
   ) async {
-    final quantity = await showProductQuantityConsumptionBottomSheet(
+    final quantity = await showProductQuantityAdjustmentBottomSheet(
       context: context,
       product: product,
+      mode: ProductQuantityAdjustmentMode.consume,
     );
 
     if (quantity == null || !context.mounted) {
@@ -149,6 +151,45 @@ class _ProductListPageState extends ConsumerState<ProductListPage>
         AppSnackbar.success(
           context,
           '${_formatQuantity(quantity)} ${_unitLabel(product, quantity)} used',
+        );
+      }
+    } on ProductQuantityConsumptionException catch (error) {
+      if (context.mounted) {
+        AppSnackbar.error(context, error.message);
+      }
+    } catch (error) {
+      if (context.mounted) {
+        AppSnackbar.error(context, 'Failed to update product');
+      }
+    }
+  }
+
+  Future<void> _handleAddQuantity(
+    BuildContext context,
+    WidgetRef ref,
+    ProductModel product,
+  ) async {
+    final quantity = await showProductQuantityAdjustmentBottomSheet(
+      context: context,
+      product: product,
+      mode: ProductQuantityAdjustmentMode.add,
+    );
+
+    if (quantity == null || !context.mounted) {
+      return;
+    }
+
+    try {
+      final viewModel = ref.read(productListViewModelProvider);
+      await viewModel.addProductQuantity(
+        productId: product.id,
+        quantity: quantity,
+      );
+
+      if (context.mounted) {
+        AppSnackbar.success(
+          context,
+          '${_formatQuantity(quantity)} ${_unitLabel(product, quantity)} added',
         );
       }
     } on ProductQuantityConsumptionException catch (error) {

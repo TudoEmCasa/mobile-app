@@ -159,6 +159,32 @@ void main() {
     },
   );
 
+  test('addProductQuantity adds quantity and persists change', () async {
+    final categoryId = await categoryRepository.createCategory('Fruits');
+    final productTypeId = await productTypeRepository.createProductType(
+      'Apple',
+      categoryId,
+    );
+    final unitId = await unitRepository.createUnit('Package', 'pkg');
+    final id = await repository.createProduct(
+      name: 'Rice',
+      productTypeId: productTypeId,
+      unitId: unitId,
+      quantity: 5.0,
+    );
+
+    final updated = await repository.addProductQuantity(
+      productId: id,
+      quantity: 2.5,
+    );
+
+    expect(updated.quantity, 7.5);
+
+    final fromDb = await repository.getProductById(id);
+    expect(fromDb, isNotNull);
+    expect(fromDb!.quantity, 7.5);
+  });
+
   test(
     'consumeProductQuantity rejects invalid or excessive quantity',
     () async {
@@ -186,6 +212,26 @@ void main() {
       );
     },
   );
+
+  test('addProductQuantity rejects invalid quantity', () async {
+    final categoryId = await categoryRepository.createCategory('Fruits');
+    final productTypeId = await productTypeRepository.createProductType(
+      'Apple',
+      categoryId,
+    );
+    final unitId = await unitRepository.createUnit('Package', 'pkg');
+    final id = await repository.createProduct(
+      name: 'Rice',
+      productTypeId: productTypeId,
+      unitId: unitId,
+      quantity: 5.0,
+    );
+
+    expect(
+      () => repository.addProductQuantity(productId: id, quantity: 0),
+      throwsA(isA<Exception>()),
+    );
+  });
 
   test('deleteProduct removes product and updates watchers', () async {
     final categoryId = await categoryRepository.createCategory('Fruits');

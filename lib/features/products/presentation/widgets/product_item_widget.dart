@@ -4,6 +4,7 @@ import 'package:tudo_em_casa/features/products/data/models/product_model.dart';
 
 class ProductItemWidget extends StatelessWidget {
   final ProductModel product;
+  final VoidCallback? onAdd;
   final VoidCallback? onUse;
   final VoidCallback? onEdit;
   final VoidCallback? onDelete;
@@ -11,6 +12,7 @@ class ProductItemWidget extends StatelessWidget {
   const ProductItemWidget({
     super.key,
     required this.product,
+    this.onAdd,
     this.onUse,
     this.onEdit,
     this.onDelete,
@@ -45,6 +47,11 @@ class ProductItemWidget extends StatelessWidget {
               alignment: WrapAlignment.end,
               crossAxisAlignment: WrapCrossAlignment.center,
               children: [
+                IconButton(
+                  onPressed: onAdd,
+                  tooltip: 'Add quantity',
+                  icon: const Icon(Icons.add_circle_outline),
+                ),
                 IconButton(
                   onPressed: onUse,
                   tooltip: 'Use product',
