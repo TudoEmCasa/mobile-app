@@ -1,6 +1,7 @@
 import 'package:drift/drift.dart';
 import 'package:tudo_em_casa/core/database/app_database.dart';
 import 'package:tudo_em_casa/features/categories/data/models/category_model.dart';
+import 'package:tudo_em_casa/features/products/data/exceptions/product_quantity_consumption_exception.dart';
 import 'package:tudo_em_casa/features/product_types/data/models/product_type_model.dart';
 import 'package:tudo_em_casa/features/products/data/models/index.dart';
 import 'package:tudo_em_casa/features/units/data/models/unit_model.dart';
@@ -199,6 +200,44 @@ class ProductRepository {
     final companion = product.toCompanion();
 
     return _db.update(_db.products).replace(companion);
+  }
+
+  Future<ProductModel> consumeProductQuantity({
+    required int productId,
+    required double quantity,
+  }) async {
+    if (!quantity.isFinite || quantity <= 0) {
+      throw const ProductQuantityConsumptionException(
+        'Quantity must be greater than zero',
+      );
+    }
+
+    return _db.transaction(() async {
+      final currentProduct = await getProductById(productId);
+
+      if (currentProduct == null) {
+        throw const ProductQuantityConsumptionException('Product not found');
+      }
+
+      if (quantity > currentProduct.quantity) {
+        throw const ProductQuantityConsumptionException(
+          'Insufficient quantity',
+        );
+      }
+
+      final updatedQuantity = currentProduct.quantity - quantity;
+
+      await (_db.update(_db.products)..where((t) => t.id.equals(productId)))
+          .write(ProductsCompanion(quantity: Value(updatedQuantity)));
+
+      final updatedProduct = await getProductById(productId);
+
+      if (updatedProduct == null) {
+        throw const ProductQuantityConsumptionException('Product not found');
+      }
+
+      return updatedProduct;
+    });
   }
 
   Future<bool> deleteProduct(int id) async {

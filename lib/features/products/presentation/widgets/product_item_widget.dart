@@ -4,12 +4,14 @@ import 'package:tudo_em_casa/features/products/data/models/product_model.dart';
 
 class ProductItemWidget extends StatelessWidget {
   final ProductModel product;
+  final VoidCallback? onUse;
   final VoidCallback? onEdit;
   final VoidCallback? onDelete;
 
   const ProductItemWidget({
     super.key,
     required this.product,
+    this.onUse,
     this.onEdit,
     this.onDelete,
   });
@@ -26,22 +28,40 @@ class ProductItemWidget extends StatelessWidget {
 
     return Card(
       margin: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-      child: ListTile(
-        title: Text(product.name),
-        subtitle: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
+      child: Padding(
+        padding: const EdgeInsets.all(14),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
+            Text(product.name, style: Theme.of(context).textTheme.titleMedium),
             const SizedBox(height: 4),
             Text('$unitText • $productTypeName'),
             const SizedBox(height: 4),
             Text('Expires: $expirationText'),
-          ],
-        ),
-        trailing: Row(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            IconButton(icon: const Icon(Icons.edit), onPressed: onEdit),
-            IconButton(icon: const Icon(Icons.delete), onPressed: onDelete),
+            const SizedBox(height: 10),
+            Wrap(
+              spacing: 4,
+              runSpacing: 4,
+              alignment: WrapAlignment.end,
+              crossAxisAlignment: WrapCrossAlignment.center,
+              children: [
+                IconButton(
+                  onPressed: onUse,
+                  tooltip: 'Use product',
+                  icon: const Icon(Icons.remove_circle_outline),
+                ),
+                IconButton(
+                  onPressed: onEdit,
+                  tooltip: 'Edit product',
+                  icon: const Icon(Icons.edit),
+                ),
+                IconButton(
+                  onPressed: onDelete,
+                  tooltip: 'Delete product',
+                  icon: const Icon(Icons.delete),
+                ),
+              ],
+            ),
           ],
         ),
       ),

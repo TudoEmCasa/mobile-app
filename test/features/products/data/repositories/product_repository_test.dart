@@ -119,6 +119,74 @@ void main() {
     expect(fromDb.quantity, 5.0);
   });
 
+  test(
+    'consumeProductQuantity subtracts quantity and keeps product visible',
+    () async {
+      final categoryId = await categoryRepository.createCategory('Fruits');
+      final productTypeId = await productTypeRepository.createProductType(
+        'Apple',
+        categoryId,
+      );
+      final unitId = await unitRepository.createUnit('Package', 'pkg');
+      final id = await repository.createProduct(
+        name: 'Rice',
+        productTypeId: productTypeId,
+        unitId: unitId,
+        quantity: 5.0,
+      );
+
+      final updated = await repository.consumeProductQuantity(
+        productId: id,
+        quantity: 2.0,
+      );
+
+      expect(updated.quantity, 3.0);
+
+      final fromDb = await repository.getProductById(id);
+      expect(fromDb, isNotNull);
+      expect(fromDb!.quantity, 3.0);
+
+      final consumedAll = await repository.consumeProductQuantity(
+        productId: id,
+        quantity: 3.0,
+      );
+
+      expect(consumedAll.quantity, 0.0);
+
+      final zeroQuantityProduct = await repository.getProductById(id);
+      expect(zeroQuantityProduct, isNotNull);
+      expect(zeroQuantityProduct!.quantity, 0.0);
+    },
+  );
+
+  test(
+    'consumeProductQuantity rejects invalid or excessive quantity',
+    () async {
+      final categoryId = await categoryRepository.createCategory('Fruits');
+      final productTypeId = await productTypeRepository.createProductType(
+        'Apple',
+        categoryId,
+      );
+      final unitId = await unitRepository.createUnit('Package', 'pkg');
+      final id = await repository.createProduct(
+        name: 'Rice',
+        productTypeId: productTypeId,
+        unitId: unitId,
+        quantity: 5.0,
+      );
+
+      expect(
+        () => repository.consumeProductQuantity(productId: id, quantity: 0),
+        throwsA(isA<Exception>()),
+      );
+
+      expect(
+        () => repository.consumeProductQuantity(productId: id, quantity: 6),
+        throwsA(isA<Exception>()),
+      );
+    },
+  );
+
   test('deleteProduct removes product and updates watchers', () async {
     final categoryId = await categoryRepository.createCategory('Fruits');
     final productTypeId = await productTypeRepository.createProductType(

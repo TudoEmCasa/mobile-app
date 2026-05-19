@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:tudo_em_casa/core/feedback/app_snackbar.dart';
 import 'package:tudo_em_casa/core/feedback/load_error_feedback_mixin.dart';
 import 'package:tudo_em_casa/core/widgets/app_confirmation_bottom_sheet.dart';
+import 'package:tudo_em_casa/features/products/data/exceptions/product_quantity_consumption_exception.dart';
 import 'package:tudo_em_casa/features/products/data/models/index.dart';
 import 'package:tudo_em_casa/features/products/data/providers/product_repository_provider.dart';
 import 'package:tudo_em_casa/features/products/presentation/pages/product_form_page.dart';
@@ -58,6 +59,7 @@ class _ProductListPageState extends ConsumerState<ProductListPage>
               final product = products[index];
               return ProductItemWidget(
                 product: product,
+                onUse: () => _handleUseQuantity(context, ref, product),
                 onEdit: () => widget._navigateToForm(context, product),
                 onDelete: () => _handleDelete(context, ref, product),
               );
@@ -120,5 +122,66 @@ class _ProductListPageState extends ConsumerState<ProductListPage>
         AppSnackbar.error(context, 'Failed to delete product');
       }
     }
+  }
+
+  Future<void> _handleUseQuantity(
+    BuildContext context,
+    WidgetRef ref,
+    ProductModel product,
+  ) async {
+    final quantity = await showProductQuantityConsumptionBottomSheet(
+      context: context,
+      product: product,
+    );
+
+    if (quantity == null || !context.mounted) {
+      return;
+    }
+
+    try {
+      final viewModel = ref.read(productListViewModelProvider);
+      await viewModel.consumeProductQuantity(
+        productId: product.id,
+        quantity: quantity,
+      );
+
+      if (context.mounted) {
+        AppSnackbar.success(
+          context,
+          '${_formatQuantity(quantity)} ${_unitLabel(product, quantity)} used',
+        );
+      }
+    } on ProductQuantityConsumptionException catch (error) {
+      if (context.mounted) {
+        AppSnackbar.error(context, error.message);
+      }
+    } catch (error) {
+      if (context.mounted) {
+        AppSnackbar.error(context, 'Failed to update product');
+      }
+    }
+  }
+
+  String _formatQuantity(double quantity) {
+    if (quantity == quantity.roundToDouble()) {
+      return quantity.toInt().toString();
+    }
+
+    return quantity.toString();
+  }
+
+  String _unitLabel(ProductModel product, double quantity) {
+    final unitName = product.unit?.name.trim();
+
+    if (unitName == null || unitName.isEmpty) {
+      return quantity == 1 ? 'unit' : 'units';
+    }
+
+    if (quantity == 1) {
+      return unitName.toLowerCase();
+    }
+
+    final lowered = unitName.toLowerCase();
+    return lowered.endsWith('s') ? lowered : '${lowered}s';
   }
 }
