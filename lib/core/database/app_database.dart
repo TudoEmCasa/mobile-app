@@ -5,6 +5,7 @@ import 'package:drift/native.dart';
 import 'package:path/path.dart' as p;
 import 'package:path_provider/path_provider.dart';
 import 'package:tudo_em_casa/core/database/tables/categories.dart';
+import 'package:tudo_em_casa/core/database/tables/lots.dart';
 import 'package:tudo_em_casa/core/database/tables/product_types.dart';
 import 'package:tudo_em_casa/core/database/tables/products.dart';
 import 'package:tudo_em_casa/core/database/tables/units.dart';
@@ -22,14 +23,14 @@ LazyDatabase _openConnection() {
   });
 }
 
-@DriftDatabase(tables: [Categories, ProductTypes, Units, Products])
+@DriftDatabase(tables: [Categories, ProductTypes, Units, Products, Lots])
 class AppDatabase extends _$AppDatabase {
   AppDatabase() : super(_openConnection());
 
   AppDatabase.forTesting(super.executor);
 
   @override
-  int get schemaVersion => 4;
+  int get schemaVersion => 5;
 
   @override
   MigrationStrategy get migration => MigrationStrategy(
@@ -37,16 +38,10 @@ class AppDatabase extends _$AppDatabase {
       await m.createAll();
     },
     onUpgrade: (m, from, to) async {
-      if (from < 2) {
-        await m.createTable(productTypes);
-      }
-
-      if (from < 3) {
-        await m.createTable(units);
-      }
-
-      if (from < 4) {
-        await m.createTable(products);
+      if (from < 5) {
+        await m.deleteTable('lots');
+        await m.deleteTable('products');
+        await m.createAll();
       }
     },
   );

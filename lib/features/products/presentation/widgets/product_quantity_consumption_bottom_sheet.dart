@@ -104,7 +104,7 @@ class _ProductQuantityAdjustmentSheetState
     }
 
     if (widget.mode == ProductQuantityAdjustmentMode.consume &&
-        quantity > widget.product.quantity) {
+        quantity > _currentQuantity) {
       return 'Insufficient quantity';
     }
 
@@ -119,8 +119,8 @@ class _ProductQuantityAdjustmentSheetState
     }
 
     return widget.mode == ProductQuantityAdjustmentMode.consume
-        ? widget.product.quantity - enteredQuantity
-        : widget.product.quantity + enteredQuantity;
+        ? _currentQuantity - enteredQuantity
+        : _currentQuantity + enteredQuantity;
   }
 
   bool get _canConfirm => _quantityErrorText == null;
@@ -148,7 +148,7 @@ class _ProductQuantityAdjustmentSheetState
       return;
     }
 
-    final quantityText = _formatQuantity(widget.product.quantity);
+    final quantityText = _formatQuantity(_currentQuantity);
 
     _quantityController.value = TextEditingValue(
       text: quantityText,
@@ -175,7 +175,7 @@ class _ProductQuantityAdjustmentSheetState
   }
 
   String _unitLabel(double quantity) {
-    final unitName = widget.product.unit?.name.trim();
+    final unitName = _currentUnitName;
 
     if (unitName == null || unitName.isEmpty) {
       return 'units';
@@ -192,6 +192,24 @@ class _ProductQuantityAdjustmentSheetState
     }
 
     return lowered.endsWith('s') ? lowered : '${lowered}s';
+  }
+
+  double get _currentQuantity {
+    return widget.product.lots?.fold<double>(
+          0,
+          (sum, lot) => sum + lot.quantity,
+        ) ??
+        0;
+  }
+
+  String? get _currentUnitName {
+    final lots = widget.product.lots;
+
+    if (lots == null || lots.isEmpty) {
+      return null;
+    }
+
+    return lots.first.unit?.name.trim();
   }
 
   @override
@@ -231,7 +249,7 @@ class _ProductQuantityAdjustmentSheetState
                 Text(widget.product.name, style: theme.textTheme.titleLarge),
                 const SizedBox(height: 4),
                 Text(
-                  'Current: ${_formatQuantity(widget.product.quantity)} ${_unitLabel(widget.product.quantity)}',
+                  'Current: ${_formatQuantity(_currentQuantity)} ${_unitLabel(_currentQuantity)}',
                   style: theme.textTheme.bodyMedium,
                 ),
                 const SizedBox(height: 12),
@@ -257,7 +275,7 @@ class _ProductQuantityAdjustmentSheetState
                         ? Padding(
                             padding: const EdgeInsets.only(right: 8),
                             child: TextButton(
-                              onPressed: widget.product.quantity > 0
+                              onPressed: _currentQuantity > 0
                                   ? _useAllQuantity
                                   : null,
                               style: TextButton.styleFrom(

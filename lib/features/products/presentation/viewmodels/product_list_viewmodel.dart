@@ -10,13 +10,7 @@ class ProductListViewModel {
   Future<int> createProduct(ProductModel product) {
     final repository = _ref.read(productRepositoryProvider);
 
-    return repository.createProduct(
-      name: product.name,
-      productTypeId: product.productTypeId,
-      unitId: product.unitId,
-      quantity: product.quantity,
-      expirationDate: product.expirationDate,
-    );
+    return repository.createProduct(product);
   }
 
   Future<bool> updateProduct(ProductModel product) {

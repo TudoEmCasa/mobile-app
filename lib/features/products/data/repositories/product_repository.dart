@@ -1,91 +1,57 @@
 import 'package:drift/drift.dart';
 import 'package:tudo_em_casa/core/database/app_database.dart';
 import 'package:tudo_em_casa/features/categories/data/models/category_model.dart';
-import 'package:tudo_em_casa/features/products/data/exceptions/product_quantity_consumption_exception.dart';
+import 'package:tudo_em_casa/features/lots/data/models/index.dart';
+import 'package:tudo_em_casa/features/lots/data/repositories/lot_repository.dart';
 import 'package:tudo_em_casa/features/product_types/data/models/product_type_model.dart';
+import 'package:tudo_em_casa/features/products/data/exceptions/product_quantity_consumption_exception.dart';
 import 'package:tudo_em_casa/features/products/data/models/index.dart';
-import 'package:tudo_em_casa/features/units/data/models/unit_model.dart';
 
 class ProductRepository {
   final AppDatabase _db;
+  final LotRepository _lotRepository;
 
-  ProductRepository(this._db);
+  ProductRepository(this._db, this._lotRepository);
 
-  Future<int> createProduct({
-    required String name,
-    required int productTypeId,
-    required int unitId,
-    required double quantity,
-    DateTime? expirationDate,
-  }) {
-    final normalizedExpiration = expirationDate != null
-        ? DateTime(
-            expirationDate.year,
-            expirationDate.month,
-            expirationDate.day,
-          )
-        : null;
+  Future<int> createProduct(ProductModel product) async {
+    final productId = await _db
+        .into(_db.products)
+        .insert(product.toCompanion(insertingNew: true));
 
-    final companion = ProductsCompanion.insert(
-      name: name,
-      productTypeId: productTypeId,
-      unitId: unitId,
-      quantity: quantity,
-      expirationDate: Value(normalizedExpiration),
-      createdAt: DateTime.now(),
-    );
+    final lots = product.lots;
+    if (lots != null && lots.isNotEmpty) {
+      await _lotRepository.insertLots(
+        lots.map((lot) => lot.copyWith(productId: productId)).toList(),
+      );
+    }
 
-    return _db.into(_db.products).insert(companion);
+    return productId;
   }
 
   Future<ProductModel?> getProductById(int id) async {
-    final query = _db.select(_db.products).join([
-      innerJoin(
-        _db.productTypes,
-        _db.productTypes.id.equalsExp(_db.products.productTypeId),
-      ),
-      innerJoin(
-        _db.categories,
-        _db.categories.id.equalsExp(_db.productTypes.categoryId),
-      ),
-      innerJoin(_db.units, _db.units.id.equalsExp(_db.products.unitId)),
-    ])..where(_db.products.id.equals(id));
+    final product = await (_db.select(
+      _db.products,
+    )..where((t) => t.id.equals(id))).getSingleOrNull();
 
-    final row = await query.getSingleOrNull();
+    if (product == null) {
+      return null;
+    }
 
-    if (row == null) return null;
-
-    final product = row.readTable(_db.products);
-    final productType = row.readTable(_db.productTypes);
-    final category = row.readTable(_db.categories);
-    final unit = row.readTable(_db.units);
-
-    return ProductModel(
-      id: product.id,
-      name: product.name,
-      productTypeId: product.productTypeId,
-      unitId: product.unitId,
-      quantity: product.quantity,
-      expirationDate: product.expirationDate,
-      createdAt: product.createdAt,
-      productType: ProductTypeModel(
-        id: productType.id,
-        name: productType.name,
-        categoryId: productType.categoryId,
-        category: CategoryModel.fromDrift(category),
-      ),
-      unit: UnitModel.fromDrift(unit),
-    );
+    return _loadProductRelations(ProductModel.fromDrift(product));
   }
 
   Future<List<ProductModel>> getProducts() async {
-    final query = (_db.select(_db.products)
-      ..orderBy([
-        (t) => OrderingTerm(expression: t.name, mode: OrderingMode.asc),
-      ]));
-    final products = await query.get();
+    final products =
+        await (_db.select(_db.products)..orderBy([
+              (t) => OrderingTerm(expression: t.name, mode: OrderingMode.asc),
+            ]))
+            .get();
 
-    return products.map(ProductModel.fromDrift).toList();
+    return Future.wait(
+      products.map(
+        (product) => _loadProductRelations(ProductModel.fromDrift(product)),
+      ),
+    );
   }
 
   Future<void> clearProducts() async {
@@ -97,55 +63,40 @@ class ProductRepository {
       return;
     }
 
-    final companions = products.map((product) {
-      return product.toCompanion();
-    }).toList();
-
     await _db.batch((batch) {
-      batch.insertAll(_db.products, companions);
+      batch.insertAll(
+        _db.products,
+        products.map((product) => product.toCompanion()).toList(),
+      );
     });
+
+    final lots = <LotModel>[];
+    for (final product in products) {
+      final productLots = product.lots;
+
+      if (productLots == null || productLots.isEmpty) {
+        continue;
+      }
+
+      lots.addAll(
+        productLots.map((lot) => lot.copyWith(productId: product.id)),
+      );
+    }
+
+    if (lots.isNotEmpty) {
+      await _lotRepository.insertLots(lots);
+    }
   }
 
   Stream<ProductModel?> watchProductById(int id) {
     final query = _db.select(_db.products)..where((t) => t.id.equals(id));
 
-    return query.watch().asyncMap((products) async {
-      if (products.isEmpty) return null;
+    return query.watchSingleOrNull().asyncMap((product) async {
+      if (product == null) {
+        return null;
+      }
 
-      final product = products.first;
-
-      final productTypeRow = await (_db.select(
-        _db.productTypes,
-      )..where((t) => t.id.equals(product.productTypeId))).getSingleOrNull();
-      final categoryRow = productTypeRow != null
-          ? await (_db.select(_db.categories)
-                  ..where((t) => t.id.equals(productTypeRow.categoryId)))
-                .getSingleOrNull()
-          : null;
-      final unitRow = await (_db.select(
-        _db.units,
-      )..where((t) => t.id.equals(product.unitId))).getSingleOrNull();
-
-      return ProductModel(
-        id: product.id,
-        name: product.name,
-        productTypeId: product.productTypeId,
-        unitId: product.unitId,
-        quantity: product.quantity,
-        expirationDate: product.expirationDate,
-        createdAt: product.createdAt,
-        productType: productTypeRow != null
-            ? ProductTypeModel(
-                id: productTypeRow.id,
-                name: productTypeRow.name,
-                categoryId: productTypeRow.categoryId,
-                category: categoryRow != null
-                    ? CategoryModel.fromDrift(categoryRow)
-                    : null,
-              )
-            : null,
-        unit: unitRow != null ? UnitModel.fromDrift(unitRow) : null,
-      );
+      return _loadProductRelations(ProductModel.fromDrift(product));
     });
   }
 
@@ -160,26 +111,20 @@ class ProductRepository {
             _db.categories,
             _db.categories.id.equalsExp(_db.productTypes.categoryId),
           ),
-          leftOuterJoin(_db.units, _db.units.id.equalsExp(_db.products.unitId)),
         ])..orderBy([
           OrderingTerm(expression: _db.products.name, mode: OrderingMode.asc),
         ]);
 
-    return query.watch().map((rows) {
-      return rows.map((row) {
+    return query.watch().asyncMap((rows) async {
+      final products = rows.map((row) {
         final product = row.readTable(_db.products);
         final productType = row.readTableOrNull(_db.productTypes);
         final category = row.readTableOrNull(_db.categories);
-        final unit = row.readTableOrNull(_db.units);
 
         return ProductModel(
           id: product.id,
           name: product.name,
           productTypeId: product.productTypeId,
-          unitId: product.unitId,
-          quantity: product.quantity,
-          expirationDate: product.expirationDate,
-          createdAt: product.createdAt,
           productType: productType != null
               ? ProductTypeModel(
                   id: productType.id,
@@ -190,16 +135,31 @@ class ProductRepository {
                       : null,
                 )
               : null,
-          unit: unit != null ? UnitModel.fromDrift(unit) : null,
         );
       }).toList();
+
+      return Future.wait(products.map(_loadProductRelations));
     });
   }
 
   Future<bool> updateProduct(ProductModel product) async {
-    final companion = product.toCompanion();
+    await _db.update(_db.products).replace(product.toCompanion());
 
-    return _db.update(_db.products).replace(companion);
+    final lots = product.lots;
+    if (lots != null && lots.isNotEmpty) {
+      final firstLot = lots.first;
+      if (firstLot.id == 0) {
+        await _lotRepository.createLot(
+          firstLot.copyWith(productId: product.id),
+        );
+      } else {
+        await _lotRepository.updateLot(
+          firstLot.copyWith(productId: product.id),
+        );
+      }
+    }
+
+    return true;
   }
 
   Future<ProductModel> consumeProductQuantity({
@@ -219,16 +179,22 @@ class ProductRepository {
         throw const ProductQuantityConsumptionException('Product not found');
       }
 
-      if (quantity > currentProduct.quantity) {
+      final currentLots = currentProduct.lots ?? const <LotModel>[];
+      if (currentLots.isEmpty) {
+        throw const ProductQuantityConsumptionException('Lot not found');
+      }
+
+      final currentLot = currentLots.first;
+
+      if (quantity > currentLot.quantity) {
         throw const ProductQuantityConsumptionException(
           'Insufficient quantity',
         );
       }
 
-      final updatedQuantity = currentProduct.quantity - quantity;
-
-      await (_db.update(_db.products)..where((t) => t.id.equals(productId)))
-          .write(ProductsCompanion(quantity: Value(updatedQuantity)));
+      await _lotRepository.updateLot(
+        currentLot.copyWith(quantity: currentLot.quantity - quantity),
+      );
 
       final updatedProduct = await getProductById(productId);
 
@@ -257,10 +223,15 @@ class ProductRepository {
         throw const ProductQuantityConsumptionException('Product not found');
       }
 
-      final updatedQuantity = currentProduct.quantity + quantity;
+      final currentLots = currentProduct.lots ?? const <LotModel>[];
+      if (currentLots.isEmpty) {
+        throw const ProductQuantityConsumptionException('Lot not found');
+      }
 
-      await (_db.update(_db.products)..where((t) => t.id.equals(productId)))
-          .write(ProductsCompanion(quantity: Value(updatedQuantity)));
+      final currentLot = currentLots.first;
+      await _lotRepository.updateLot(
+        currentLot.copyWith(quantity: currentLot.quantity + quantity),
+      );
 
       final updatedProduct = await getProductById(productId);
 
@@ -276,5 +247,31 @@ class ProductRepository {
     await (_db.delete(_db.products)..where((t) => t.id.equals(id))).go();
 
     return true;
+  }
+
+  Future<ProductModel> _loadProductRelations(ProductModel product) async {
+    final productTypeRow = await (_db.select(
+      _db.productTypes,
+    )..where((t) => t.id.equals(product.productTypeId))).getSingleOrNull();
+    final categoryRow = productTypeRow != null
+        ? await (_db.select(_db.categories)
+                ..where((t) => t.id.equals(productTypeRow.categoryId)))
+              .getSingleOrNull()
+        : null;
+    final lots = await _lotRepository.getLotsByProductId(product.id);
+
+    return product.copyWith(
+      productType: productTypeRow != null
+          ? ProductTypeModel(
+              id: productTypeRow.id,
+              name: productTypeRow.name,
+              categoryId: productTypeRow.categoryId,
+              category: categoryRow != null
+                  ? CategoryModel.fromDrift(categoryRow)
+                  : null,
+            )
+          : null,
+      lots: lots.isEmpty ? null : lots,
+    );
   }
 }

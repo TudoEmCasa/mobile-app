@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:tudo_em_casa/core/utils/date_formatter.dart';
+import 'package:tudo_em_casa/features/units/data/models/unit_model.dart';
 import 'package:tudo_em_casa/features/products/data/models/product_model.dart';
 
 class ProductItemWidget extends StatelessWidget {
@@ -20,12 +21,14 @@ class ProductItemWidget extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final unitText = product.unit != null
-        ? '${product.quantity} ${product.unit!.symbol}'
-        : '${product.quantity}';
+    final totalQuantity = _totalQuantity;
+    final unit = _firstUnit;
+    final unitText = unit != null
+        ? '${_formatQuantity(totalQuantity)} ${unit.symbol}'
+        : _formatQuantity(totalQuantity);
     final productTypeName = product.productType?.name ?? '';
-    final expirationText = product.expirationDate != null
-        ? DateFormatter.formatDate(product.expirationDate!)
+    final expirationText = _firstExpirationDate != null
+        ? DateFormatter.formatDate(_firstExpirationDate!)
         : 'No expiration';
 
     return Card(
@@ -73,5 +76,37 @@ class ProductItemWidget extends StatelessWidget {
         ),
       ),
     );
+  }
+
+  double get _totalQuantity {
+    return product.lots?.fold<double>(0, (sum, lot) => sum + lot.quantity) ?? 0;
+  }
+
+  UnitModel? get _firstUnit {
+    final lots = product.lots;
+
+    if (lots == null || lots.isEmpty) {
+      return null;
+    }
+
+    return lots.first.unit;
+  }
+
+  DateTime? get _firstExpirationDate {
+    final lots = product.lots;
+
+    if (lots == null || lots.isEmpty) {
+      return null;
+    }
+
+    return lots.first.expirationDate;
+  }
+
+  String _formatQuantity(double quantity) {
+    if (quantity == quantity.roundToDouble()) {
+      return quantity.toInt().toString();
+    }
+
+    return quantity.toString();
   }
 }

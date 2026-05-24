@@ -28,7 +28,7 @@ class DataExportException implements Exception {
 }
 
 class DataExportService {
-  static const int _schemaVersion = 1;
+  static const int _schemaVersion = 2;
 
   final CategoryRepository _categoryRepository;
   final ProductTypeRepository _productTypeRepository;

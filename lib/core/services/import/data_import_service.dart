@@ -41,7 +41,7 @@ class BackupImportPayload {
 }
 
 class DataImportService {
-  static const int _schemaVersion = 1;
+  static const int _schemaVersion = 2;
 
   final AppDatabase _database;
   final CategoryRepository _categoryRepository;
@@ -269,10 +269,35 @@ class DataImportService {
     for (final product in products) {
       if (!productIds.add(product.id) ||
           !productTypeIds.contains(product.productTypeId) ||
-          !unitIds.contains(product.unitId)) {
+          !_validateProductLots(product, productIds, unitIds)) {
         throw const DataImportException('Invalid backup file.');
       }
     }
+  }
+
+  bool _validateProductLots(
+    ProductModel product,
+    Set<int> productIds,
+    Set<int> unitIds,
+  ) {
+    final lots = product.lots;
+
+    if (lots == null || lots.isEmpty) {
+      return true;
+    }
+
+    final lotIds = <int>{};
+
+    for (final lot in lots) {
+      if (!lotIds.add(lot.id) ||
+          lot.productId != product.id ||
+          !productIds.contains(lot.productId) ||
+          !unitIds.contains(lot.unitId)) {
+        return false;
+      }
+    }
+
+    return true;
   }
 
   static Future<Uint8List?> _defaultPickBackupFile({String? dialogTitle}) {

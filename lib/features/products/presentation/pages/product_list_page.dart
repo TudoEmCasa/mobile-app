@@ -212,7 +212,9 @@ class _ProductListPageState extends ConsumerState<ProductListPage>
   }
 
   String _unitLabel(ProductModel product, double quantity) {
-    final unitName = product.unit?.name.trim();
+    final unitName = product.lots?.isNotEmpty == true
+        ? product.lots!.first.unit?.name.trim()
+        : null;
 
     if (unitName == null || unitName.isEmpty) {
       return quantity == 1 ? 'unit' : 'units';

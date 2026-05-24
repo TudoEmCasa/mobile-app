@@ -9,6 +9,8 @@ import 'package:tudo_em_casa/core/database/app_database.dart';
 import 'package:tudo_em_casa/core/services/import/data_import_service.dart';
 import 'package:tudo_em_casa/features/categories/data/models/category_model.dart';
 import 'package:tudo_em_casa/features/categories/data/repositories/category_repository.dart';
+import 'package:tudo_em_casa/features/lots/data/models/lot_model.dart';
+import 'package:tudo_em_casa/features/lots/data/repositories/lot_repository.dart';
 import 'package:tudo_em_casa/features/product_types/data/models/product_type_model.dart';
 import 'package:tudo_em_casa/features/product_types/data/repositories/product_type_repository.dart';
 import 'package:tudo_em_casa/features/products/data/models/product_model.dart';
@@ -25,6 +27,10 @@ class FailingUnitRepository extends UnitRepository {
   }
 }
 
+ProductRepository createProductRepository(AppDatabase database) {
+  return ProductRepository(database, LotRepository(database));
+}
+
 void main() {
   test('returns null when the user cancels file selection', () async {
     final database = AppDatabase.forTesting(NativeDatabase.memory());
@@ -35,7 +41,7 @@ void main() {
       categoryRepository: CategoryRepository(database),
       productTypeRepository: ProductTypeRepository(database),
       unitRepository: UnitRepository(database),
-      productRepository: ProductRepository(database),
+      productRepository: createProductRepository(database),
       pickBackupFile: ({dialogTitle}) async => null,
     );
 
@@ -53,7 +59,7 @@ void main() {
       categoryRepository: CategoryRepository(database),
       productTypeRepository: ProductTypeRepository(database),
       unitRepository: UnitRepository(database),
-      productRepository: ProductRepository(database),
+      productRepository: createProductRepository(database),
       pickBackupFile: ({dialogTitle}) async {
         return Uint8List.fromList(utf8.encode('{"schemaVersion":2}'));
       },
@@ -73,14 +79,12 @@ void main() {
     });
 
     final exportDatabase = AppDatabase.forTesting(NativeDatabase.memory());
-    final importDatabase = AppDatabase.forTesting(NativeDatabase.memory());
     addTearDown(exportDatabase.close);
-    addTearDown(importDatabase.close);
 
     final exportCategoryRepository = CategoryRepository(exportDatabase);
     final exportProductTypeRepository = ProductTypeRepository(exportDatabase);
     final exportUnitRepository = UnitRepository(exportDatabase);
-    final exportProductRepository = ProductRepository(exportDatabase);
+    final exportProductRepository = createProductRepository(exportDatabase);
 
     final categoryId = await exportCategoryRepository.createCategory('Pantry');
     final unitId = await exportUnitRepository.createUnit('Kilogram', 'kg');
@@ -89,11 +93,20 @@ void main() {
       categoryId,
     );
     await exportProductRepository.createProduct(
-      name: 'Rice',
-      productTypeId: productTypeId,
-      unitId: unitId,
-      quantity: 2.5,
-      expirationDate: DateTime(2026, 1, 1),
+      ProductModel(
+        id: 0,
+        name: 'Rice',
+        productTypeId: productTypeId,
+        lots: [
+          LotModel(
+            id: 0,
+            productId: 0,
+            unitId: unitId,
+            quantity: 2.5,
+            expirationDate: DateTime(2026, 1, 1),
+          ),
+        ],
+      ),
     );
 
     final exportService = DataExportService(
@@ -111,12 +124,17 @@ void main() {
     final exportFilePath = await exportService.exportData();
     final exportBytes = await File(exportFilePath!).readAsBytes();
 
+    await exportDatabase.close();
+
+    final importDatabase = AppDatabase.forTesting(NativeDatabase.memory());
+    addTearDown(importDatabase.close);
+
     final importService = DataImportService(
       database: importDatabase,
       categoryRepository: CategoryRepository(importDatabase),
       productTypeRepository: ProductTypeRepository(importDatabase),
       unitRepository: UnitRepository(importDatabase),
-      productRepository: ProductRepository(importDatabase),
+      productRepository: createProductRepository(importDatabase),
       pickBackupFile: ({dialogTitle}) async => Uint8List.fromList(exportBytes),
     );
 
@@ -134,12 +152,14 @@ void main() {
     final importedUnits = await UnitRepository(importDatabase).getUnits();
     final importedProducts = await ProductRepository(
       importDatabase,
+      LotRepository(importDatabase),
     ).getProducts();
 
     expect(importedCategories.single.name, 'Pantry');
     expect(importedProductTypes.single.name, 'Rice');
     expect(importedUnits.single.symbol, 'kg');
-    expect(importedProducts.single.quantity, 2.5);
+    expect(importedProducts.single.lots, hasLength(1));
+    expect(importedProducts.single.lots!.single.quantity, 2.5);
   });
 
   test(
@@ -151,17 +171,27 @@ void main() {
       final categoryRepository = CategoryRepository(database);
       final productTypeRepository = ProductTypeRepository(database);
       final unitRepository = UnitRepository(database);
-      final productRepository = ProductRepository(database);
+      final productRepository = createProductRepository(database);
 
       final originalCategoryId = await categoryRepository.createCategory('Old');
       final originalUnitId = await unitRepository.createUnit('Old Unit', 'ou');
       final originalProductTypeId = await productTypeRepository
           .createProductType('Old Type', originalCategoryId);
       await productRepository.createProduct(
-        name: 'Old Product',
-        productTypeId: originalProductTypeId,
-        unitId: originalUnitId,
-        quantity: 1,
+        ProductModel(
+          id: 0,
+          name: 'Old Product',
+          productTypeId: originalProductTypeId,
+          lots: [
+            LotModel(
+              id: 0,
+              productId: 0,
+              unitId: originalUnitId,
+              quantity: 1,
+              expirationDate: null,
+            ),
+          ],
+        ),
       );
 
       final backupPayload = BackupImportPayload(
@@ -173,10 +203,15 @@ void main() {
             id: 40,
             name: 'Rice',
             productTypeId: 20,
-            unitId: 30,
-            quantity: 2.5,
-            expirationDate: DateTime(2026, 1, 1),
-            createdAt: DateTime(2026, 1, 2),
+            lots: [
+              LotModel(
+                id: 41,
+                productId: 40,
+                unitId: 30,
+                quantity: 2.5,
+                expirationDate: DateTime(2026, 1, 1),
+              ),
+            ],
           ),
         ],
       );
@@ -208,8 +243,9 @@ void main() {
       expect(products, hasLength(1));
       expect(products.single.id, 40);
       expect(products.single.productTypeId, 20);
-      expect(products.single.unitId, 30);
-      expect(products.single.quantity, 2.5);
+      expect(products.single.lots, hasLength(1));
+      expect(products.single.lots!.single.unitId, 30);
+      expect(products.single.lots!.single.quantity, 2.5);
     },
   );
 
@@ -221,7 +257,7 @@ void main() {
 
       final categoryRepository = CategoryRepository(database);
       final productTypeRepository = ProductTypeRepository(database);
-      final productRepository = ProductRepository(database);
+      final productRepository = createProductRepository(database);
 
       await categoryRepository.createCategory('Original');
 
@@ -234,10 +270,15 @@ void main() {
             id: 4,
             name: 'Rice',
             productTypeId: 2,
-            unitId: 3,
-            quantity: 1,
-            expirationDate: null,
-            createdAt: DateTime(2026, 1, 2),
+            lots: [
+              LotModel(
+                id: 5,
+                productId: 4,
+                unitId: 3,
+                quantity: 1,
+                expirationDate: null,
+              ),
+            ],
           ),
         ],
       );

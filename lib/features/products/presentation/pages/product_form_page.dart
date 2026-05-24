@@ -5,6 +5,7 @@ import 'package:tudo_em_casa/core/utils/date_formatter.dart';
 import 'package:tudo_em_casa/features/product_types/data/models/index.dart';
 import 'package:tudo_em_casa/features/product_types/data/providers/product_type_repository_provider.dart';
 import 'package:tudo_em_casa/features/product_types/presentation/pages/index.dart';
+import 'package:tudo_em_casa/features/lots/data/models/index.dart';
 import 'package:tudo_em_casa/features/products/data/models/index.dart';
 import 'package:tudo_em_casa/features/products/presentation/viewmodels/product_list_viewmodel.dart';
 import 'package:tudo_em_casa/features/units/data/models/index.dart';
@@ -32,20 +33,31 @@ class _ProductFormPageState extends ConsumerState<ProductFormPage> {
 
   bool get _isEditMode => widget.product != null;
 
+  LotModel? get _initialLot {
+    final lots = widget.product?.lots;
+
+    if (lots == null || lots.isEmpty) {
+      return null;
+    }
+
+    return lots.first;
+  }
+
   @override
   void initState() {
     super.initState();
+    final initialLot = _initialLot;
     _nameController = TextEditingController(
       text: _isEditMode ? widget.product!.name : '',
     );
     _quantityController = TextEditingController(
-      text: _isEditMode ? widget.product!.quantity.toString() : '0',
+      text: initialLot != null ? initialLot.quantity.toString() : '0',
     );
     _selectedProductTypeId = _isEditMode ? widget.product!.productTypeId : null;
     _selectedProductType = _isEditMode ? widget.product!.productType : null;
-    _selectedUnitId = _isEditMode ? widget.product!.unitId : null;
-    _selectedUnit = _isEditMode ? widget.product!.unit : null;
-    _expirationDate = _isEditMode ? widget.product!.expirationDate : null;
+    _selectedUnitId = initialLot?.unitId;
+    _selectedUnit = initialLot?.unit;
+    _expirationDate = initialLot?.expirationDate;
   }
 
   @override
@@ -139,14 +151,23 @@ class _ProductFormPageState extends ConsumerState<ProductFormPage> {
 
     try {
       final viewModel = ref.read(productListViewModelProvider);
+      final lot = LotModel.create(
+        productId: widget.product?.id ?? 0,
+        unitId: _selectedUnitId!,
+        quantity: quantity,
+        expirationDate: _expirationDate,
+      ).copyWith(unit: _selectedUnit);
 
       if (_isEditMode) {
         final updated = widget.product!.copyWith(
           name: name,
-          quantity: quantity,
           productTypeId: _selectedProductTypeId,
-          unitId: _selectedUnitId,
-          expirationDate: _expirationDate,
+          lots: [
+            lot.copyWith(
+              id: _initialLot?.id ?? 0,
+              productId: widget.product!.id,
+            ),
+          ],
         );
         await viewModel.updateProduct(updated);
       } else {
@@ -154,9 +175,7 @@ class _ProductFormPageState extends ConsumerState<ProductFormPage> {
           ProductModel.create(
             name: name,
             productTypeId: _selectedProductTypeId!,
-            unitId: _selectedUnitId!,
-            quantity: quantity,
-            expirationDate: _expirationDate,
+            lots: [lot],
           ),
         );
       }

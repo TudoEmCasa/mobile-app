@@ -2,6 +2,8 @@ import 'package:drift/native.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:tudo_em_casa/core/database/app_database.dart';
 import 'package:tudo_em_casa/features/categories/data/repositories/category_repository.dart';
+import 'package:tudo_em_casa/features/lots/data/models/lot_model.dart';
+import 'package:tudo_em_casa/features/lots/data/repositories/lot_repository.dart';
 import 'package:tudo_em_casa/features/product_types/data/repositories/product_type_repository.dart';
 import 'package:tudo_em_casa/features/products/data/models/index.dart';
 import 'package:tudo_em_casa/features/products/data/repositories/product_repository.dart';
@@ -19,7 +21,7 @@ void main() {
     categoryRepository = CategoryRepository(db);
     productTypeRepository = ProductTypeRepository(db);
     unitRepository = UnitRepository(db);
-    repository = ProductRepository(db);
+    repository = ProductRepository(db, LotRepository(db));
   });
 
   tearDown(() async {
@@ -37,11 +39,20 @@ void main() {
       final unitId = await unitRepository.createUnit('Kilogram', 'kg');
 
       final id = await repository.createProduct(
-        name: 'Green Apple',
-        productTypeId: productTypeId,
-        unitId: unitId,
-        quantity: 1.5,
-        expirationDate: DateTime(2026, 12, 31),
+        ProductModel(
+          id: 0,
+          name: 'Green Apple',
+          productTypeId: productTypeId,
+          lots: [
+            LotModel(
+              id: 0,
+              productId: 0,
+              unitId: unitId,
+              quantity: 1.5,
+              expirationDate: DateTime(2026, 12, 31),
+            ),
+          ],
+        ),
       );
 
       expect(id, greaterThan(0));
@@ -53,8 +64,9 @@ void main() {
       expect(product.productType!.name, 'Apple');
       expect(product.productType!.category, isNotNull);
       expect(product.productType!.category!.name, 'Fruits');
-      expect(product.unit, isNotNull);
-      expect(product.unit!.symbol, 'kg');
+      expect(product.lots, hasLength(1));
+      expect(product.lots!.single.unit, isNotNull);
+      expect(product.lots!.single.unit!.symbol, 'kg');
     },
   );
 
@@ -77,16 +89,36 @@ void main() {
     );
 
     await repository.createProduct(
-      name: 'A',
-      productTypeId: productTypeId,
-      unitId: unitId,
-      quantity: 1.0,
+      ProductModel(
+        id: 0,
+        name: 'A',
+        productTypeId: productTypeId,
+        lots: [
+          LotModel(
+            id: 0,
+            productId: 0,
+            unitId: unitId,
+            quantity: 1.0,
+            expirationDate: null,
+          ),
+        ],
+      ),
     );
     await repository.createProduct(
-      name: 'B',
-      productTypeId: productTypeId,
-      unitId: unitId,
-      quantity: 2.0,
+      ProductModel(
+        id: 0,
+        name: 'B',
+        productTypeId: productTypeId,
+        lots: [
+          LotModel(
+            id: 0,
+            productId: 0,
+            unitId: unitId,
+            quantity: 2.0,
+            expirationDate: null,
+          ),
+        ],
+      ),
     );
 
     await expectation;
@@ -100,23 +132,36 @@ void main() {
     );
     final unitId = await unitRepository.createUnit('Unit', 'u');
     final id = await repository.createProduct(
-      name: 'A',
-      productTypeId: productTypeId,
-      unitId: unitId,
-      quantity: 1.0,
+      ProductModel(
+        id: 0,
+        name: 'A',
+        productTypeId: productTypeId,
+        lots: [
+          LotModel(
+            id: 0,
+            productId: 0,
+            unitId: unitId,
+            quantity: 1.0,
+            expirationDate: null,
+          ),
+        ],
+      ),
     );
 
     final fetched = await repository.getProductById(id);
     expect(fetched, isNotNull);
 
-    final updated = fetched!.copyWith(name: 'Updated A', quantity: 5.0);
+    final updated = fetched!.copyWith(
+      name: 'Updated A',
+      lots: [fetched.lots!.first.copyWith(quantity: 5.0)],
+    );
     final result = await repository.updateProduct(updated);
     expect(result, isTrue);
 
     final fromDb = await repository.getProductById(id);
     expect(fromDb, isNotNull);
     expect(fromDb!.name, 'Updated A');
-    expect(fromDb.quantity, 5.0);
+    expect(fromDb.lots!.first.quantity, 5.0);
   });
 
   test(
@@ -129,10 +174,20 @@ void main() {
       );
       final unitId = await unitRepository.createUnit('Package', 'pkg');
       final id = await repository.createProduct(
-        name: 'Rice',
-        productTypeId: productTypeId,
-        unitId: unitId,
-        quantity: 5.0,
+        ProductModel(
+          id: 0,
+          name: 'Rice',
+          productTypeId: productTypeId,
+          lots: [
+            LotModel(
+              id: 0,
+              productId: 0,
+              unitId: unitId,
+              quantity: 5.0,
+              expirationDate: null,
+            ),
+          ],
+        ),
       );
 
       final updated = await repository.consumeProductQuantity(
@@ -140,22 +195,22 @@ void main() {
         quantity: 2.0,
       );
 
-      expect(updated.quantity, 3.0);
+      expect(updated.lots!.first.quantity, 3.0);
 
       final fromDb = await repository.getProductById(id);
       expect(fromDb, isNotNull);
-      expect(fromDb!.quantity, 3.0);
+      expect(fromDb!.lots!.first.quantity, 3.0);
 
       final consumedAll = await repository.consumeProductQuantity(
         productId: id,
         quantity: 3.0,
       );
 
-      expect(consumedAll.quantity, 0.0);
+      expect(consumedAll.lots!.first.quantity, 0.0);
 
       final zeroQuantityProduct = await repository.getProductById(id);
       expect(zeroQuantityProduct, isNotNull);
-      expect(zeroQuantityProduct!.quantity, 0.0);
+      expect(zeroQuantityProduct!.lots!.first.quantity, 0.0);
     },
   );
 
@@ -167,10 +222,20 @@ void main() {
     );
     final unitId = await unitRepository.createUnit('Package', 'pkg');
     final id = await repository.createProduct(
-      name: 'Rice',
-      productTypeId: productTypeId,
-      unitId: unitId,
-      quantity: 5.0,
+      ProductModel(
+        id: 0,
+        name: 'Rice',
+        productTypeId: productTypeId,
+        lots: [
+          LotModel(
+            id: 0,
+            productId: 0,
+            unitId: unitId,
+            quantity: 5.0,
+            expirationDate: null,
+          ),
+        ],
+      ),
     );
 
     final updated = await repository.addProductQuantity(
@@ -178,11 +243,11 @@ void main() {
       quantity: 2.5,
     );
 
-    expect(updated.quantity, 7.5);
+    expect(updated.lots!.first.quantity, 7.5);
 
     final fromDb = await repository.getProductById(id);
     expect(fromDb, isNotNull);
-    expect(fromDb!.quantity, 7.5);
+    expect(fromDb!.lots!.first.quantity, 7.5);
   });
 
   test(
@@ -195,10 +260,20 @@ void main() {
       );
       final unitId = await unitRepository.createUnit('Package', 'pkg');
       final id = await repository.createProduct(
-        name: 'Rice',
-        productTypeId: productTypeId,
-        unitId: unitId,
-        quantity: 5.0,
+        ProductModel(
+          id: 0,
+          name: 'Rice',
+          productTypeId: productTypeId,
+          lots: [
+            LotModel(
+              id: 0,
+              productId: 0,
+              unitId: unitId,
+              quantity: 5.0,
+              expirationDate: null,
+            ),
+          ],
+        ),
       );
 
       expect(
@@ -221,10 +296,20 @@ void main() {
     );
     final unitId = await unitRepository.createUnit('Package', 'pkg');
     final id = await repository.createProduct(
-      name: 'Rice',
-      productTypeId: productTypeId,
-      unitId: unitId,
-      quantity: 5.0,
+      ProductModel(
+        id: 0,
+        name: 'Rice',
+        productTypeId: productTypeId,
+        lots: [
+          LotModel(
+            id: 0,
+            productId: 0,
+            unitId: unitId,
+            quantity: 5.0,
+            expirationDate: null,
+          ),
+        ],
+      ),
     );
 
     expect(
@@ -242,16 +327,36 @@ void main() {
     final unitId = await unitRepository.createUnit('Unit', 'u');
 
     final firstId = await repository.createProduct(
-      name: 'A',
-      productTypeId: productTypeId,
-      unitId: unitId,
-      quantity: 1.0,
+      ProductModel(
+        id: 0,
+        name: 'A',
+        productTypeId: productTypeId,
+        lots: [
+          LotModel(
+            id: 0,
+            productId: 0,
+            unitId: unitId,
+            quantity: 1.0,
+            expirationDate: null,
+          ),
+        ],
+      ),
     );
     final secondId = await repository.createProduct(
-      name: 'B',
-      productTypeId: productTypeId,
-      unitId: unitId,
-      quantity: 2.0,
+      ProductModel(
+        id: 0,
+        name: 'B',
+        productTypeId: productTypeId,
+        lots: [
+          LotModel(
+            id: 0,
+            productId: 0,
+            unitId: unitId,
+            quantity: 2.0,
+            expirationDate: null,
+          ),
+        ],
+      ),
     );
 
     final stream = repository.watchProducts();
