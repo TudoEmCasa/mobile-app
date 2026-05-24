@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
 
-class EmptyProductsWidget extends StatelessWidget {
+class EmptyLotsWidget extends StatelessWidget {
   final VoidCallback onCreatePressed;
 
-  const EmptyProductsWidget({super.key, required this.onCreatePressed});
+  const EmptyLotsWidget({super.key, required this.onCreatePressed});
 
   @override
   Widget build(BuildContext context) {
@@ -13,21 +13,22 @@ class EmptyProductsWidget extends StatelessWidget {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Icon(Icons.inbox, size: 64, color: Colors.grey.shade400),
-            const SizedBox(height: 16),
-            Text(
-              'No products yet',
-              style: Theme.of(context).textTheme.titleLarge,
+            Icon(
+              Icons.inventory_2_outlined,
+              size: 64,
+              color: Colors.grey.shade400,
             ),
+            const SizedBox(height: 16),
+            Text('No lots yet', style: Theme.of(context).textTheme.titleLarge),
             const SizedBox(height: 8),
             const Text(
-              'Create your first product catalog entry to get started.',
+              'Add a lot to track quantities, units, and expiration dates.',
               textAlign: TextAlign.center,
             ),
             const SizedBox(height: 16),
             ElevatedButton(
               onPressed: onCreatePressed,
-              child: const Text('Create Product'),
+              child: const Text('Create Lot'),
             ),
           ],
         ),

@@ -1,12 +1,12 @@
 import 'package:flutter/material.dart';
-import 'package:tudo_em_casa/features/products/data/models/product_model.dart';
+import 'package:tudo_em_casa/features/lots/data/models/index.dart';
 
-enum ProductQuantityAdjustmentMode { add, consume }
+enum LotQuantityAdjustmentMode { add, consume }
 
-Future<double?> showProductQuantityAdjustmentBottomSheet({
+Future<double?> showLotQuantityAdjustmentBottomSheet({
   required BuildContext context,
-  required ProductModel product,
-  required ProductQuantityAdjustmentMode mode,
+  required LotModel lot,
+  required LotQuantityAdjustmentMode mode,
 }) async {
   return showModalBottomSheet<double>(
     context: context,
@@ -18,38 +18,35 @@ Future<double?> showProductQuantityAdjustmentBottomSheet({
       borderRadius: BorderRadius.vertical(top: Radius.circular(28)),
     ),
     builder: (context) {
-      return _ProductQuantityAdjustmentSheet(product: product, mode: mode);
+      return _LotQuantityAdjustmentSheet(lot: lot, mode: mode);
     },
   );
 }
 
-Future<double?> showProductQuantityConsumptionBottomSheet({
+Future<double?> showLotQuantityConsumptionBottomSheet({
   required BuildContext context,
-  required ProductModel product,
+  required LotModel lot,
 }) {
-  return showProductQuantityAdjustmentBottomSheet(
+  return showLotQuantityAdjustmentBottomSheet(
     context: context,
-    product: product,
-    mode: ProductQuantityAdjustmentMode.consume,
+    lot: lot,
+    mode: LotQuantityAdjustmentMode.consume,
   );
 }
 
-class _ProductQuantityAdjustmentSheet extends StatefulWidget {
-  final ProductModel product;
-  final ProductQuantityAdjustmentMode mode;
+class _LotQuantityAdjustmentSheet extends StatefulWidget {
+  final LotModel lot;
+  final LotQuantityAdjustmentMode mode;
 
-  const _ProductQuantityAdjustmentSheet({
-    required this.product,
-    required this.mode,
-  });
+  const _LotQuantityAdjustmentSheet({required this.lot, required this.mode});
 
   @override
-  State<_ProductQuantityAdjustmentSheet> createState() =>
-      _ProductQuantityAdjustmentSheetState();
+  State<_LotQuantityAdjustmentSheet> createState() =>
+      _LotQuantityAdjustmentSheetState();
 }
 
-class _ProductQuantityAdjustmentSheetState
-    extends State<_ProductQuantityAdjustmentSheet> {
+class _LotQuantityAdjustmentSheetState
+    extends State<_LotQuantityAdjustmentSheet> {
   late final TextEditingController _quantityController;
 
   @override
@@ -86,6 +83,8 @@ class _ProductQuantityAdjustmentSheetState
     return quantity;
   }
 
+  double get _currentQuantity => widget.lot.quantity;
+
   String? get _quantityErrorText {
     final text = _quantityController.text.trim();
 
@@ -103,7 +102,7 @@ class _ProductQuantityAdjustmentSheetState
       return 'Quantity must be greater than zero';
     }
 
-    if (widget.mode == ProductQuantityAdjustmentMode.consume &&
+    if (widget.mode == LotQuantityAdjustmentMode.consume &&
         quantity > _currentQuantity) {
       return 'Insufficient quantity';
     }
@@ -118,7 +117,7 @@ class _ProductQuantityAdjustmentSheetState
       return null;
     }
 
-    return widget.mode == ProductQuantityAdjustmentMode.consume
+    return widget.mode == LotQuantityAdjustmentMode.consume
         ? _currentQuantity - enteredQuantity
         : _currentQuantity + enteredQuantity;
   }
@@ -126,25 +125,25 @@ class _ProductQuantityAdjustmentSheetState
   bool get _canConfirm => _quantityErrorText == null;
 
   String get _title {
-    return widget.mode == ProductQuantityAdjustmentMode.consume
+    return widget.mode == LotQuantityAdjustmentMode.consume
         ? 'Consume quantity'
         : 'Add quantity';
   }
 
   String get _quantityLabel {
-    return widget.mode == ProductQuantityAdjustmentMode.consume
+    return widget.mode == LotQuantityAdjustmentMode.consume
         ? 'Quantity to use'
         : 'Quantity to add';
   }
 
   String get _previewLabel {
-    return widget.mode == ProductQuantityAdjustmentMode.consume
+    return widget.mode == LotQuantityAdjustmentMode.consume
         ? 'Remaining'
         : 'New total';
   }
 
   void _useAllQuantity() {
-    if (widget.mode != ProductQuantityAdjustmentMode.consume) {
+    if (widget.mode != LotQuantityAdjustmentMode.consume) {
       return;
     }
 
@@ -175,7 +174,7 @@ class _ProductQuantityAdjustmentSheetState
   }
 
   String _unitLabel(double quantity) {
-    final unitName = _currentUnitName;
+    final unitName = widget.lot.unit?.name.trim();
 
     if (unitName == null || unitName.isEmpty) {
       return 'units';
@@ -183,33 +182,11 @@ class _ProductQuantityAdjustmentSheetState
 
     final lowered = unitName.toLowerCase();
 
-    if (lowered == 'kg' || lowered == 'g' || lowered == 'l') {
-      return lowered;
-    }
-
     if (quantity == 1) {
       return lowered;
     }
 
     return lowered.endsWith('s') ? lowered : '${lowered}s';
-  }
-
-  double get _currentQuantity {
-    return widget.product.lots?.fold<double>(
-          0,
-          (sum, lot) => sum + lot.quantity,
-        ) ??
-        0;
-  }
-
-  String? get _currentUnitName {
-    final lots = widget.product.lots;
-
-    if (lots == null || lots.isEmpty) {
-      return null;
-    }
-
-    return lots.first.unit?.name.trim();
   }
 
   @override
@@ -246,7 +223,10 @@ class _ProductQuantityAdjustmentSheetState
                 const SizedBox(height: 12),
                 Text(_title, style: theme.textTheme.titleMedium),
                 const SizedBox(height: 4),
-                Text(widget.product.name, style: theme.textTheme.titleLarge),
+                Text(
+                  widget.lot.unit?.name ?? 'Lot',
+                  style: theme.textTheme.titleLarge,
+                ),
                 const SizedBox(height: 4),
                 Text(
                   'Current: ${_formatQuantity(_currentQuantity)} ${_unitLabel(_currentQuantity)}',
@@ -270,8 +250,7 @@ class _ProductQuantityAdjustmentSheetState
                       minWidth: 0,
                       minHeight: 0,
                     ),
-                    suffixIcon:
-                        widget.mode == ProductQuantityAdjustmentMode.consume
+                    suffixIcon: widget.mode == LotQuantityAdjustmentMode.consume
                         ? Padding(
                             padding: const EdgeInsets.only(right: 8),
                             child: TextButton(

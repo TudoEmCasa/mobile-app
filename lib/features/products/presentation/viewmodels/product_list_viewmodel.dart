@@ -18,30 +18,6 @@ class ProductListViewModel {
     return repository.updateProduct(product);
   }
 
-  Future<ProductModel> consumeProductQuantity({
-    required int productId,
-    required double quantity,
-  }) {
-    final repository = _ref.read(productRepositoryProvider);
-
-    return repository.consumeProductQuantity(
-      productId: productId,
-      quantity: quantity,
-    );
-  }
-
-  Future<ProductModel> addProductQuantity({
-    required int productId,
-    required double quantity,
-  }) {
-    final repository = _ref.read(productRepositoryProvider);
-
-    return repository.addProductQuantity(
-      productId: productId,
-      quantity: quantity,
-    );
-  }
-
   Future<bool> deleteProduct(int id) {
     final repository = _ref.read(productRepositoryProvider);
     return repository.deleteProduct(id);

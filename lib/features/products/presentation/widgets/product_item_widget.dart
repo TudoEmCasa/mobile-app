@@ -1,35 +1,24 @@
 import 'package:flutter/material.dart';
-import 'package:tudo_em_casa/core/utils/date_formatter.dart';
-import 'package:tudo_em_casa/features/units/data/models/unit_model.dart';
 import 'package:tudo_em_casa/features/products/data/models/product_model.dart';
 
 class ProductItemWidget extends StatelessWidget {
   final ProductModel product;
-  final VoidCallback? onAdd;
-  final VoidCallback? onUse;
+  final VoidCallback? onTap;
   final VoidCallback? onEdit;
   final VoidCallback? onDelete;
 
   const ProductItemWidget({
     super.key,
     required this.product,
-    this.onAdd,
-    this.onUse,
+    this.onTap,
     this.onEdit,
     this.onDelete,
   });
 
   @override
   Widget build(BuildContext context) {
-    final totalQuantity = _totalQuantity;
-    final unit = _firstUnit;
-    final unitText = unit != null
-        ? '${_formatQuantity(totalQuantity)} ${unit.symbol}'
-        : _formatQuantity(totalQuantity);
     final productTypeName = product.productType?.name ?? '';
-    final expirationText = _firstExpirationDate != null
-        ? DateFormatter.formatDate(_firstExpirationDate!)
-        : 'No expiration';
+    final categoryName = product.productType?.category?.name;
 
     return Card(
       margin: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
@@ -38,11 +27,17 @@ class ProductItemWidget extends StatelessWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            Text(product.name, style: Theme.of(context).textTheme.titleMedium),
-            const SizedBox(height: 4),
-            Text('$unitText • $productTypeName'),
-            const SizedBox(height: 4),
-            Text('Expires: $expirationText'),
+            ListTile(
+              contentPadding: EdgeInsets.zero,
+              onTap: onTap,
+              leading: const Icon(Icons.inventory_2_outlined),
+              title: Text(product.name),
+              subtitle: Text(
+                categoryName == null || categoryName.isEmpty
+                    ? productTypeName
+                    : '$productTypeName • $categoryName',
+              ),
+            ),
             const SizedBox(height: 10),
             Wrap(
               spacing: 4,
@@ -50,16 +45,6 @@ class ProductItemWidget extends StatelessWidget {
               alignment: WrapAlignment.end,
               crossAxisAlignment: WrapCrossAlignment.center,
               children: [
-                IconButton(
-                  onPressed: onAdd,
-                  tooltip: 'Add quantity',
-                  icon: const Icon(Icons.add_circle_outline),
-                ),
-                IconButton(
-                  onPressed: onUse,
-                  tooltip: 'Use product',
-                  icon: const Icon(Icons.remove_circle_outline),
-                ),
                 IconButton(
                   onPressed: onEdit,
                   tooltip: 'Edit product',
@@ -76,37 +61,5 @@ class ProductItemWidget extends StatelessWidget {
         ),
       ),
     );
-  }
-
-  double get _totalQuantity {
-    return product.lots?.fold<double>(0, (sum, lot) => sum + lot.quantity) ?? 0;
-  }
-
-  UnitModel? get _firstUnit {
-    final lots = product.lots;
-
-    if (lots == null || lots.isEmpty) {
-      return null;
-    }
-
-    return lots.first.unit;
-  }
-
-  DateTime? get _firstExpirationDate {
-    final lots = product.lots;
-
-    if (lots == null || lots.isEmpty) {
-      return null;
-    }
-
-    return lots.first.expirationDate;
-  }
-
-  String _formatQuantity(double quantity) {
-    if (quantity == quantity.roundToDouble()) {
-      return quantity.toInt().toString();
-    }
-
-    return quantity.toString();
   }
 }

@@ -1,6 +1,7 @@
 import 'package:drift/drift.dart';
 import 'package:tudo_em_casa/core/database/app_database.dart';
 import 'package:tudo_em_casa/features/lots/data/models/index.dart';
+import 'package:tudo_em_casa/features/products/data/exceptions/product_quantity_consumption_exception.dart';
 import 'package:tudo_em_casa/features/units/data/models/unit_model.dart';
 
 class LotRepository {
@@ -79,6 +80,74 @@ class LotRepository {
   Future<bool> deleteLot(int id) async {
     await (_db.delete(_db.lots)..where((t) => t.id.equals(id))).go();
     return true;
+  }
+
+  Future<LotModel> addLotQuantity({
+    required int lotId,
+    required double quantity,
+  }) async {
+    if (!quantity.isFinite || quantity <= 0) {
+      throw const ProductQuantityConsumptionException(
+        'Quantity must be greater than zero',
+      );
+    }
+
+    return _db.transaction(() async {
+      final currentLot = await getLotById(lotId);
+
+      if (currentLot == null) {
+        throw const ProductQuantityConsumptionException('Lot not found');
+      }
+
+      await updateLot(
+        currentLot.copyWith(quantity: currentLot.quantity + quantity),
+      );
+
+      final updatedLot = await getLotById(lotId);
+
+      if (updatedLot == null) {
+        throw const ProductQuantityConsumptionException('Lot not found');
+      }
+
+      return updatedLot;
+    });
+  }
+
+  Future<LotModel> consumeLotQuantity({
+    required int lotId,
+    required double quantity,
+  }) async {
+    if (!quantity.isFinite || quantity <= 0) {
+      throw const ProductQuantityConsumptionException(
+        'Quantity must be greater than zero',
+      );
+    }
+
+    return _db.transaction(() async {
+      final currentLot = await getLotById(lotId);
+
+      if (currentLot == null) {
+        throw const ProductQuantityConsumptionException('Lot not found');
+      }
+
+      if (quantity > currentLot.quantity) {
+        throw const ProductQuantityConsumptionException(
+          'Insufficient quantity',
+        );
+      }
+
+      await updateLot(
+        currentLot.copyWith(quantity: currentLot.quantity - quantity),
+      );
+
+      final updatedLot = await getLotById(lotId);
+
+      if (updatedLot == null) {
+        throw const ProductQuantityConsumptionException('Lot not found');
+      }
+
+      return updatedLot;
+    });
   }
 
   Stream<List<LotModel>> watchLotsByProductId(int productId) {
