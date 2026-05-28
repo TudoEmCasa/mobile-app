@@ -12,12 +12,6 @@ final dataExportServiceProvider = Provider<DataExportService>((ref) {
     productTypeRepository: ref.watch(productTypeRepositoryProvider),
     unitRepository: ref.watch(unitRepositoryProvider),
     productRepository: ref.watch(productRepositoryProvider),
-    saveFile: ({dialogTitle, fileName, bytes}) {
-      return FilePicker.saveFile(
-        dialogTitle: dialogTitle,
-        fileName: fileName,
-        bytes: bytes,
-      );
-    },
+    saveFile: FilePicker.saveFile,
   );
 });
