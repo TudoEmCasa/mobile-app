@@ -1,7 +1,7 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:tudo_em_casa/core/services/export/data_export_service_provider.dart';
 import 'package:tudo_em_casa/core/services/import/data_import_service.dart';
 import 'package:tudo_em_casa/core/services/import/data_import_service_provider.dart';
-import 'package:tudo_em_casa/core/services/export/data_export_service_provider.dart';
 
 final settingsViewModelProvider = NotifierProvider<SettingsViewModel, bool>(
   SettingsViewModel.new,

@@ -98,7 +98,7 @@ class _ProductDetailsPageState extends ConsumerState<ProductDetailsPage>
                             'Lots: ${lots.length}',
                             style: Theme.of(context).textTheme.titleMedium,
                           ),
-                          Text('Inventory is tracked per lot below.'),
+                          const Text('Inventory is tracked per lot below.'),
                         ],
                       ),
                     ),

@@ -2,10 +2,10 @@ import 'dart:convert';
 import 'dart:io';
 import 'dart:typed_data';
 
-import 'package:tudo_em_casa/core/services/export/data_export_service.dart';
 import 'package:drift/native.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:tudo_em_casa/core/database/app_database.dart';
+import 'package:tudo_em_casa/core/services/export/data_export_service.dart';
 import 'package:tudo_em_casa/core/services/import/data_import_service.dart';
 import 'package:tudo_em_casa/features/categories/data/models/category_model.dart';
 import 'package:tudo_em_casa/features/categories/data/repositories/category_repository.dart';
