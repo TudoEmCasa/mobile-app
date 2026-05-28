@@ -21,7 +21,7 @@ class ProductItemWidget extends StatelessWidget {
     final categoryName = product.productType?.category?.name;
 
     return Card(
-      margin: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+      margin: const EdgeInsets.symmetric(vertical: 6),
       child: Padding(
         padding: const EdgeInsets.all(14),
         child: Column(

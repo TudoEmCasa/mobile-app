@@ -133,65 +133,52 @@ class _ProductTypeFormPageState extends ConsumerState<ProductTypeFormPage> {
       appBar: AppBar(
         title: Text(_isEditMode ? 'Edit Product Type' : 'Create Product Type'),
       ),
-      body: categoriesAsync.when(
-        data: (categories) {
-          if (categories.isEmpty) {
-            return const Center(
-              child: Text('No categories available. Create a category first.'),
-            );
-          }
-
-          return SafeArea(
-            child: SingleChildScrollView(
-              padding: const EdgeInsets.all(24.0),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.stretch,
-                children: [
-                  TextField(
-                    controller: _nameController,
-                    focusNode: _nameFocus,
-                    enabled: !_isSubmitting,
-                    decoration: InputDecoration(
-                      labelText: 'Product type name',
-                      hintText: 'e.g., Milk, Cheese',
-                      border: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(8),
-                      ),
-                    ),
-                    textInputAction: TextInputAction.next,
-                  ),
-                  const SizedBox(height: 16),
-                  InkWell(
-                    onTap: _isSubmitting ? null : _selectCategory,
+      body: SafeArea(
+        child: SingleChildScrollView(
+          padding: const EdgeInsets.all(24.0),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              TextField(
+                controller: _nameController,
+                focusNode: _nameFocus,
+                enabled: !_isSubmitting,
+                decoration: InputDecoration(
+                  labelText: 'Product type name',
+                  hintText: 'e.g., Milk, Cheese',
+                  border: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(8),
-                    child: InputDecorator(
-                      decoration: InputDecoration(
-                        labelText: 'Category',
-                        border: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(8),
-                        ),
-                        suffixIcon: const Icon(Icons.chevron_right),
-                      ),
-                      child: Text(
-                        selectedCategoryFromList != null
-                            ? selectedCategoryFromList.name
-                            : 'Select category',
-                        style: selectedCategoryFromList != null
-                            ? null
-                            : Theme.of(context).textTheme.bodyMedium?.copyWith(
-                                color: Theme.of(context).hintColor,
-                              ),
-                      ),
-                    ),
                   ),
-                ],
+                ),
+                textInputAction: TextInputAction.next,
               ),
-            ),
-          );
-        },
-        loading: () => const Center(child: CircularProgressIndicator()),
-        error: (error, stackTrace) =>
-            const Center(child: Text('Failed to load categories')),
+              const SizedBox(height: 16),
+              InkWell(
+                onTap: _isSubmitting ? null : _selectCategory,
+                borderRadius: BorderRadius.circular(8),
+                child: InputDecorator(
+                  decoration: InputDecoration(
+                    labelText: 'Category',
+                    border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                    suffixIcon: const Icon(Icons.chevron_right),
+                  ),
+                  child: Text(
+                    selectedCategoryFromList != null
+                        ? selectedCategoryFromList.name
+                        : 'Select category',
+                    style: selectedCategoryFromList != null
+                        ? null
+                        : Theme.of(context).textTheme.bodyMedium?.copyWith(
+                            color: Theme.of(context).hintColor,
+                          ),
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ),
       ),
       bottomNavigationBar: Padding(
         padding: EdgeInsets.only(bottom: keyboardInset),

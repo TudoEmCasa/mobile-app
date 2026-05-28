@@ -53,48 +53,72 @@ class _ProductListPageState extends ConsumerState<ProductListPage>
     final productsAsync = ref.watch(watchAllProductsProvider);
 
     return Scaffold(
-      appBar: AppBar(title: const Text('Products')),
-      body: productsAsync.when(
-        data: (products) {
-          clearLoadErrorFeedback();
+      body: SafeArea(
+        child: Padding(
+          padding: const EdgeInsets.all(16),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                'Products',
+                style: Theme.of(context).textTheme.headlineMedium,
+              ),
+              const SizedBox(height: 16),
+              Expanded(
+                child: productsAsync.when(
+                  data: (products) {
+                    clearLoadErrorFeedback();
 
-          if (products.isEmpty) {
-            return EmptyProductsWidget(
-              onCreatePressed: () => widget._navigateToForm(context),
-            );
-          }
+                    if (products.isEmpty) {
+                      return EmptyProductsWidget(
+                        onCreatePressed: () => widget._navigateToForm(context),
+                      );
+                    }
 
-          return ListView.builder(
-            itemCount: products.length,
-            itemBuilder: (context, index) {
-              final product = products[index];
-              return ProductItemWidget(
-                product: product,
-                onTap: () => widget._navigateToDetails(context, product),
-                onEdit: () => widget._navigateToForm(context, product),
-                onDelete: () => _handleDelete(context, ref, product),
-              );
-            },
-          );
-        },
-        loading: () => const Center(child: CircularProgressIndicator()),
-        error: (error, stack) {
-          showLoadErrorFeedback('Failed to load products');
+                    return ListView.builder(
+                      padding: EdgeInsets.zero,
+                      itemCount: products.length,
+                      itemBuilder: (context, index) {
+                        final product = products[index];
+                        return ProductItemWidget(
+                          product: product,
+                          onTap: () =>
+                              widget._navigateToDetails(context, product),
+                          onEdit: () =>
+                              widget._navigateToForm(context, product),
+                          onDelete: () => _handleDelete(context, ref, product),
+                        );
+                      },
+                    );
+                  },
+                  loading: () =>
+                      const Center(child: CircularProgressIndicator()),
+                  error: (error, stack) {
+                    showLoadErrorFeedback('Failed to load products');
 
-          return Center(
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                Icon(Icons.error_outline, size: 64, color: Colors.red.shade400),
-                const SizedBox(height: 16),
-                Text(
-                  'Failed to load products',
-                  style: Theme.of(context).textTheme.titleLarge,
+                    return Center(
+                      child: Column(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          Icon(
+                            Icons.error_outline,
+                            size: 64,
+                            color: Colors.red.shade400,
+                          ),
+                          const SizedBox(height: 16),
+                          Text(
+                            'Failed to load products',
+                            style: Theme.of(context).textTheme.titleLarge,
+                          ),
+                        ],
+                      ),
+                    );
+                  },
                 ),
-              ],
-            ),
-          );
-        },
+              ),
+            ],
+          ),
+        ),
       ),
       floatingActionButton: FloatingActionButton(
         onPressed: () => widget._navigateToForm(context),
