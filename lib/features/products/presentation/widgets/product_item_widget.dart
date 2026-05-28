@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:tudo_em_casa/core/utils/date_formatter.dart';
+import 'package:tudo_em_casa/features/lots/data/models/lot_model.dart';
 import 'package:tudo_em_casa/features/products/data/models/product_model.dart';
 
 class ProductItemWidget extends StatelessWidget {
@@ -17,8 +19,7 @@ class ProductItemWidget extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final productTypeName = product.productType?.name ?? '';
-    final categoryName = product.productType?.category?.name;
+    final lotSummary = _buildLotSummary();
 
     return Card(
       margin: const EdgeInsets.symmetric(vertical: 6),
@@ -32,11 +33,7 @@ class ProductItemWidget extends StatelessWidget {
               onTap: onTap,
               leading: const Icon(Icons.inventory_2_outlined),
               title: Text(product.name),
-              subtitle: Text(
-                categoryName == null || categoryName.isEmpty
-                    ? productTypeName
-                    : '$productTypeName • $categoryName',
-              ),
+              subtitle: Text(lotSummary),
             ),
             const SizedBox(height: 10),
             Wrap(
@@ -61,5 +58,46 @@ class ProductItemWidget extends StatelessWidget {
         ),
       ),
     );
+  }
+
+  String _buildLotSummary() {
+    final lots = product.lots;
+
+    if (lots == null || lots.isEmpty) {
+      return 'No lots registered';
+    }
+
+    final lot = _selectNearestExpiringLot(lots);
+    final quantityText = _formatQuantity(lot.quantity);
+    final unitText = lot.unit?.symbol ?? lot.unit?.name ?? 'units';
+    final expirationText = lot.expirationDate != null
+        ? DateFormatter.formatDate(lot.expirationDate!)
+        : 'No expiration date';
+
+    return '$quantityText $unitText • $expirationText';
+  }
+
+  LotModel _selectNearestExpiringLot(List<LotModel> lots) {
+    final lotsWithExpiration =
+        lots.where((lot) => lot.expirationDate != null).toList()
+          ..sort((left, right) {
+            final leftExpiration = left.expirationDate;
+            final rightExpiration = right.expirationDate;
+            return leftExpiration!.compareTo(rightExpiration!);
+          });
+
+    if (lotsWithExpiration.isNotEmpty) {
+      return lotsWithExpiration.first;
+    }
+
+    return lots.first;
+  }
+
+  String _formatQuantity(double quantity) {
+    if (quantity == quantity.roundToDouble()) {
+      return quantity.toInt().toString();
+    }
+
+    return quantity.toString();
   }
 }
