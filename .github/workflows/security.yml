@@ -2,9 +2,13 @@ name: Security Pipeline
 
 on:
   pull_request:
+
   push:
     branches:
       - main
+
+  schedule:
+    - cron: '0 3 * * *'
 
 jobs:
   trivy-security:
@@ -19,7 +23,22 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v6
 
-      - name: Run Trivy scan
+      - name: Cache Trivy DB
+        uses: actions/cache@v4
+        with:
+          path: ~/.cache/trivy
+          key: trivy-${{ runner.os }}-v1
+
+      - name: Define severities
+        id: severity
+        run: |
+          if [[ "${{ github.event_name }}" == "schedule" ]]; then
+            echo "levels=MEDIUM,HIGH,CRITICAL" >> $GITHUB_OUTPUT
+          else
+            echo "levels=HIGH,CRITICAL" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Run Trivy Security Scan
         uses: aquasecurity/trivy-action@master
         with:
           scan-type: 'fs'
@@ -27,16 +46,16 @@ jobs:
 
           scanners: 'vuln,secret,config'
 
-          severity: 'CRITICAL,HIGH'
+          severity: ${{ steps.severity.outputs.levels }}
 
           ignore-unfixed: true
+
+          exit-code: '1'
 
           format: 'sarif'
           output: 'trivy-results.sarif'
 
-          exit-code: '1'
-
-      - name: Upload SARIF to GitHub Security
-        uses: github/codeql-action/upload-sarif@v3
+      - name: Upload SARIF Report
+        uses: github/codeql-action/upload-sarif@v4
         with:
           sarif_file: 'trivy-results.sarif'
