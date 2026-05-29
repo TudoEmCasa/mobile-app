@@ -37,16 +37,12 @@ class DataExportService {
   final SaveFileCallback _saveFile;
 
   DataExportService({
-    required CategoryRepository categoryRepository,
-    required ProductTypeRepository productTypeRepository,
-    required UnitRepository unitRepository,
-    required ProductRepository productRepository,
+    required this._categoryRepository,
+    required this._productTypeRepository,
+    required this._unitRepository,
+    required this._productRepository,
     SaveFileCallback? saveFile,
-  }) : _categoryRepository = categoryRepository,
-       _productTypeRepository = productTypeRepository,
-       _unitRepository = unitRepository,
-       _productRepository = productRepository,
-       _saveFile = saveFile ?? _defaultSaveFile;
+  }) : _saveFile = saveFile ?? _defaultSaveFile;
 
   Future<String?> exportData() async {
     try {
