@@ -10,10 +10,15 @@ on:
   schedule:
     - cron: '0 3 * * *'
 
+concurrency:
+  group: security-${{ github.ref }}
+  cancel-in-progress: true
+
 jobs:
   trivy-security:
     name: Trivy Security Scan
     runs-on: ubuntu-latest
+    timeout-minutes: 15
 
     permissions:
       contents: read
@@ -27,7 +32,9 @@ jobs:
         uses: actions/cache@v5
         with:
           path: ~/.cache/trivy
-          key: trivy-${{ runner.os }}-v1
+          key: trivy-${{ runner.os }}-${{ github.run_id }}
+          restore-keys: |
+            trivy-${{ runner.os }}-
 
       - name: Define severities
         id: severity
@@ -39,7 +46,7 @@ jobs:
           fi
 
       - name: Run Trivy Security Scan
-        uses: aquasecurity/trivy-action@master
+        uses: aquasecurity/trivy-action@0.70.0
         with:
           scan-type: 'fs'
           scan-ref: '.'
@@ -55,7 +62,37 @@ jobs:
           format: 'sarif'
           output: 'trivy-results.sarif'
 
-      - name: Upload SARIF Report
+      - name: Upload Trivy SARIF Report
         uses: github/codeql-action/upload-sarif@v4
         with:
           sarif_file: 'trivy-results.sarif'
+
+  semgrep-security:
+    name: Semgrep SAST Scan
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+
+    if: github.event_name != 'schedule'
+
+    permissions:
+      contents: read
+      security-events: write
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v6
+
+      - name: Run Semgrep
+        uses: returntocorp/semgrep-action@v1
+        with:
+          config: >-
+            p/security-audit
+            p/secrets
+            p/owasp-top-ten
+
+          generateSarif: "1"
+
+      - name: Upload Semgrep SARIF Report
+        uses: github/codeql-action/upload-sarif@v4
+        with:
+          sarif_file: semgrep.sarif
