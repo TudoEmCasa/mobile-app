@@ -50,18 +50,13 @@ class DataImportService {
   final PickBackupFileCallback _pickBackupFile;
 
   DataImportService({
-    required AppDatabase database,
-    required CategoryRepository categoryRepository,
-    required ProductTypeRepository productTypeRepository,
-    required UnitRepository unitRepository,
-    required ProductRepository productRepository,
+    required this._database,
+    required this._categoryRepository,
+    required this._productTypeRepository,
+    required this._unitRepository,
+    required this._productRepository,
     PickBackupFileCallback? pickBackupFile,
-  }) : _database = database,
-       _categoryRepository = categoryRepository,
-       _productTypeRepository = productTypeRepository,
-       _unitRepository = unitRepository,
-       _productRepository = productRepository,
-       _pickBackupFile = pickBackupFile ?? _defaultPickBackupFile;
+  }) : _pickBackupFile = pickBackupFile ?? _defaultPickBackupFile;
 
   Future<BackupImportPayload?> pickBackupFile() async {
     _logStage('file picker opened');
