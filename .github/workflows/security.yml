@@ -1,0 +1,61 @@
+name: Security Pipeline
+
+on:
+  pull_request:
+
+  push:
+    branches:
+      - main
+
+  schedule:
+    - cron: '0 3 * * *'
+
+jobs:
+  trivy-security:
+    name: Trivy Security Scan
+    runs-on: ubuntu-latest
+
+    permissions:
+      contents: read
+      security-events: write
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v6
+
+      - name: Cache Trivy DB
+        uses: actions/cache@v5
+        with:
+          path: ~/.cache/trivy
+          key: trivy-${{ runner.os }}-v1
+
+      - name: Define severities
+        id: severity
+        run: |
+          if [[ "${{ github.event_name }}" == "schedule" ]]; then
+            echo "levels=MEDIUM,HIGH,CRITICAL" >> $GITHUB_OUTPUT
+          else
+            echo "levels=HIGH,CRITICAL" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Run Trivy Security Scan
+        uses: aquasecurity/trivy-action@master
+        with:
+          scan-type: 'fs'
+          scan-ref: '.'
+
+          scanners: 'vuln,secret,config'
+
+          severity: ${{ steps.severity.outputs.levels }}
+
+          ignore-unfixed: true
+
+          exit-code: '1'
+
+          format: 'sarif'
+          output: 'trivy-results.sarif'
+
+      - name: Upload SARIF Report
+        uses: github/codeql-action/upload-sarif@v4
+        with:
+          sarif_file: 'trivy-results.sarif'

@@ -119,6 +119,6 @@ class DataExportService {
       now.minute.toString().padLeft(2, '0'),
     ].join('_');
 
-    return 'tudo_em_casa_backup_${formattedDate}_${formattedTime}.json';
+    return 'tudo_em_casa_backup_${formattedDate}_$formattedTime.json';
   }
 }

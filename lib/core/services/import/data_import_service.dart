@@ -1,9 +1,8 @@
 import 'dart:convert';
-import 'dart:typed_data';
 import 'dart:developer' as developer;
 
-import 'package:flutter/foundation.dart';
 import 'package:file_picker/file_picker.dart';
+import 'package:flutter/foundation.dart';
 import 'package:tudo_em_casa/core/database/app_database.dart';
 import 'package:tudo_em_casa/features/categories/data/models/category_model.dart';
 import 'package:tudo_em_casa/features/categories/data/repositories/category_repository.dart';
