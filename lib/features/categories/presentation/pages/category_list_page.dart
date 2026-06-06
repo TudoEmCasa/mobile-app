@@ -8,16 +8,17 @@ import 'package:tudo_em_casa/features/categories/data/providers/index.dart';
 import 'package:tudo_em_casa/features/categories/presentation/pages/category_form_page.dart';
 import 'package:tudo_em_casa/features/categories/presentation/viewmodels/index.dart';
 import 'package:tudo_em_casa/features/categories/presentation/widgets/index.dart';
+import 'package:tudo_em_casa/l10n/localization_extension.dart';
 
 class CategoryListPage extends ConsumerStatefulWidget {
   final bool selectionMode;
-  final String selectionTitle;
+  final String? selectionTitle;
   final int? selectedCategoryId;
 
   const CategoryListPage({
     super.key,
     this.selectionMode = false,
-    this.selectionTitle = 'Select Category',
+    this.selectionTitle,
     this.selectedCategoryId,
   });
 
@@ -34,7 +35,9 @@ class _CategoryListPageState extends ConsumerState<CategoryListPage>
     return Scaffold(
       appBar: AppBar(
         title: Text(
-          widget.selectionMode ? widget.selectionTitle : 'Categories',
+          widget.selectionMode
+              ? widget.selectionTitle ?? context.l10n.text('selectCategory')
+              : context.l10n.text('categories'),
         ),
       ),
       body: categoriesAsync.when(
@@ -67,7 +70,7 @@ class _CategoryListPageState extends ConsumerState<CategoryListPage>
         },
         loading: () => const Center(child: CircularProgressIndicator()),
         error: (error, stackTrace) {
-          showLoadErrorFeedback('Failed to load categories');
+          showLoadErrorFeedback(context.l10n.text('failedToLoadCategories'));
 
           return Center(
             child: Column(
@@ -76,7 +79,7 @@ class _CategoryListPageState extends ConsumerState<CategoryListPage>
                 Icon(Icons.error_outline, size: 64, color: Colors.red.shade400),
                 const SizedBox(height: 16),
                 Text(
-                  'Failed to load categories',
+                  context.l10n.text('failedToLoadCategories'),
                   style: Theme.of(context).textTheme.titleLarge,
                 ),
               ],
@@ -86,7 +89,7 @@ class _CategoryListPageState extends ConsumerState<CategoryListPage>
       ),
       floatingActionButton: FloatingActionButton(
         onPressed: () => _navigateToCategoryForm(context),
-        tooltip: 'Add Category',
+        tooltip: context.l10n.text('addCategory'),
         child: const Icon(Icons.add),
       ),
     );
@@ -105,7 +108,9 @@ class _CategoryListPageState extends ConsumerState<CategoryListPage>
     if (saved == true && context.mounted) {
       AppSnackbar.success(
         context,
-        category == null ? 'Category created' : 'Category updated',
+        category == null
+            ? context.l10n.text('categoryCreated')
+            : context.l10n.text('categoryUpdated'),
       );
     }
   }
@@ -117,10 +122,10 @@ class _CategoryListPageState extends ConsumerState<CategoryListPage>
   ) async {
     final shouldDelete = await showAppConfirmationBottomSheet(
       context: context,
-      title: 'Delete Category?',
-      message: 'Delete "${category.name}"? This action cannot be undone.',
-      confirmLabel: 'Delete',
-      cancelLabel: 'Cancel',
+      title: context.l10n.text('deleteCategoryTitle'),
+      message: context.l10n.withName('deleteNamedEntityMessage', category.name),
+      confirmLabel: context.l10n.text('delete'),
+      cancelLabel: context.l10n.text('cancel'),
       isDangerous: true,
     );
 
@@ -132,11 +137,11 @@ class _CategoryListPageState extends ConsumerState<CategoryListPage>
       final viewModel = ref.read(categoryListViewModelProvider);
       await viewModel.deleteCategory(category.id);
       if (context.mounted) {
-        AppSnackbar.success(context, 'Category removed');
+        AppSnackbar.success(context, context.l10n.text('categoryRemoved'));
       }
     } catch (error) {
       if (context.mounted) {
-        AppSnackbar.error(context, 'Failed to delete category');
+        AppSnackbar.error(context, context.l10n.text('failedToDeleteCategory'));
       }
     }
   }

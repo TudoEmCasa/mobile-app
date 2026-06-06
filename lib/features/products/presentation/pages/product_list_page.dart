@@ -9,6 +9,7 @@ import 'package:tudo_em_casa/features/products/presentation/pages/product_detail
 import 'package:tudo_em_casa/features/products/presentation/pages/product_form_page.dart';
 import 'package:tudo_em_casa/features/products/presentation/viewmodels/product_list_viewmodel.dart';
 import 'package:tudo_em_casa/features/products/presentation/widgets/index.dart';
+import 'package:tudo_em_casa/l10n/localization_extension.dart';
 
 class ProductListPage extends ConsumerStatefulWidget {
   const ProductListPage({super.key});
@@ -29,7 +30,9 @@ class ProductListPage extends ConsumerStatefulWidget {
     if (saved == true && context.mounted) {
       AppSnackbar.success(
         context,
-        product == null ? 'Product created' : 'Product updated',
+        product == null
+            ? context.l10n.text('productCreated')
+            : context.l10n.text('productUpdated'),
       );
     }
   }
@@ -60,7 +63,7 @@ class _ProductListPageState extends ConsumerState<ProductListPage>
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Text(
-                'Products',
+                context.l10n.text('products'),
                 style: Theme.of(context).textTheme.headlineMedium,
               ),
               const SizedBox(height: 16),
@@ -94,7 +97,9 @@ class _ProductListPageState extends ConsumerState<ProductListPage>
                   loading: () =>
                       const Center(child: CircularProgressIndicator()),
                   error: (error, stack) {
-                    showLoadErrorFeedback('Failed to load products');
+                    showLoadErrorFeedback(
+                      context.l10n.text('failedToLoadProducts'),
+                    );
 
                     return Center(
                       child: Column(
@@ -107,7 +112,7 @@ class _ProductListPageState extends ConsumerState<ProductListPage>
                           ),
                           const SizedBox(height: 16),
                           Text(
-                            'Failed to load products',
+                            context.l10n.text('failedToLoadProducts'),
                             style: Theme.of(context).textTheme.titleLarge,
                           ),
                         ],
@@ -122,7 +127,7 @@ class _ProductListPageState extends ConsumerState<ProductListPage>
       ),
       floatingActionButton: FloatingActionButton(
         onPressed: () => widget._navigateToForm(context),
-        tooltip: 'Add Product',
+        tooltip: context.l10n.text('addProduct'),
         child: const Icon(Icons.add),
       ),
     );
@@ -135,10 +140,10 @@ class _ProductListPageState extends ConsumerState<ProductListPage>
   ) async {
     final shouldDelete = await showAppConfirmationBottomSheet(
       context: context,
-      title: 'Delete Product?',
-      message: 'Delete "${product.name}"? This action cannot be undone.',
-      confirmLabel: 'Delete',
-      cancelLabel: 'Cancel',
+      title: context.l10n.text('deleteProductTitle'),
+      message: context.l10n.withName('deleteNamedEntityMessage', product.name),
+      confirmLabel: context.l10n.text('delete'),
+      cancelLabel: context.l10n.text('cancel'),
       isDangerous: true,
     );
 
@@ -150,11 +155,11 @@ class _ProductListPageState extends ConsumerState<ProductListPage>
       final viewModel = ref.read(productListViewModelProvider);
       await viewModel.deleteProduct(product.id);
       if (context.mounted) {
-        AppSnackbar.success(context, 'Product removed');
+        AppSnackbar.success(context, context.l10n.text('productRemoved'));
       }
     } catch (error) {
       if (context.mounted) {
-        AppSnackbar.error(context, 'Failed to delete product');
+        AppSnackbar.error(context, context.l10n.text('failedToDeleteProduct'));
       }
     }
   }

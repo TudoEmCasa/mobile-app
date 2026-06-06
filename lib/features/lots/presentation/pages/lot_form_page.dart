@@ -8,6 +8,7 @@ import 'package:tudo_em_casa/features/products/data/models/index.dart';
 import 'package:tudo_em_casa/features/units/data/models/index.dart';
 import 'package:tudo_em_casa/features/units/data/providers/unit_repository_provider.dart';
 import 'package:tudo_em_casa/features/units/presentation/pages/index.dart';
+import 'package:tudo_em_casa/l10n/localization_extension.dart';
 
 class LotFormPage extends ConsumerStatefulWidget {
   final ProductModel product;
@@ -50,7 +51,7 @@ class _LotFormPageState extends ConsumerState<LotFormPage> {
       MaterialPageRoute(
         builder: (context) => UnitListPage(
           selectionMode: true,
-          selectionTitle: 'Select Unit',
+          selectionTitle: context.l10n.text('selectUnit'),
           selectedUnitId: _selectedUnitId,
         ),
       ),
@@ -85,12 +86,15 @@ class _LotFormPageState extends ConsumerState<LotFormPage> {
     final quantity = double.tryParse(_quantityController.text.trim()) ?? 0.0;
 
     if (quantity <= 0) {
-      AppSnackbar.error(context, 'Quantity must be greater than zero');
+      AppSnackbar.error(
+        context,
+        context.l10n.text('quantityMustBeGreaterThanZero'),
+      );
       return;
     }
 
     if (_selectedUnitId == null) {
-      AppSnackbar.error(context, 'Unit is required');
+      AppSnackbar.error(context, context.l10n.text('unitRequired'));
       return;
     }
 
@@ -125,7 +129,7 @@ class _LotFormPageState extends ConsumerState<LotFormPage> {
       }
     } catch (error) {
       if (mounted) {
-        AppSnackbar.error(context, 'Failed to save lot');
+        AppSnackbar.error(context, context.l10n.text('failedToSaveLot'));
         setState(() => _isSubmitting = false);
       }
     }
@@ -156,7 +160,13 @@ class _LotFormPageState extends ConsumerState<LotFormPage> {
     );
 
     return Scaffold(
-      appBar: AppBar(title: Text(_isEditMode ? 'Edit Lot' : 'Create Lot')),
+      appBar: AppBar(
+        title: Text(
+          _isEditMode
+              ? context.l10n.text('editLot')
+              : context.l10n.text('createLot'),
+        ),
+      ),
       body: SafeArea(
         child: SingleChildScrollView(
           padding: const EdgeInsets.all(24.0),
@@ -169,7 +179,11 @@ class _LotFormPageState extends ConsumerState<LotFormPage> {
               ),
               const SizedBox(height: 4),
               Text(
-                'Product type: ${widget.product.productType?.name ?? 'Unknown'}',
+                context.l10n.withName(
+                  'productTypeWithName',
+                  widget.product.productType?.name ??
+                      context.l10n.text('unknown'),
+                ),
               ),
               const SizedBox(height: 16),
               TextField(
@@ -178,7 +192,7 @@ class _LotFormPageState extends ConsumerState<LotFormPage> {
                   decimal: true,
                 ),
                 decoration: InputDecoration(
-                  labelText: 'Quantity',
+                  labelText: context.l10n.text('quantity'),
                   border: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(8),
                   ),
@@ -190,7 +204,7 @@ class _LotFormPageState extends ConsumerState<LotFormPage> {
                 borderRadius: BorderRadius.circular(8),
                 child: InputDecorator(
                   decoration: InputDecoration(
-                    labelText: 'Unit',
+                    labelText: context.l10n.text('unitLabel'),
                     border: OutlineInputBorder(
                       borderRadius: BorderRadius.circular(8),
                     ),
@@ -199,7 +213,7 @@ class _LotFormPageState extends ConsumerState<LotFormPage> {
                   child: Text(
                     selectedUnitFromList != null
                         ? '${selectedUnitFromList.symbol} - ${selectedUnitFromList.name}'
-                        : 'Select unit',
+                        : context.l10n.text('selectUnitLower'),
                     style: selectedUnitFromList != null
                         ? null
                         : Theme.of(context).textTheme.bodyMedium?.copyWith(
@@ -216,8 +230,13 @@ class _LotFormPageState extends ConsumerState<LotFormPage> {
                       onPressed: _pickExpirationDate,
                       child: Text(
                         _expirationDate != null
-                            ? DateFormatter.formatDate(_expirationDate!)
-                            : 'Select expiration date',
+                            ? DateFormatter.formatDate(
+                                _expirationDate!,
+                                locale: Localizations.localeOf(
+                                  context,
+                                ).toString(),
+                              )
+                            : context.l10n.text('selectExpirationDate'),
                       ),
                     ),
                   ),
@@ -248,7 +267,11 @@ class _LotFormPageState extends ConsumerState<LotFormPage> {
                       color: Colors.white,
                     ),
                   )
-                : Text(_isEditMode ? 'Update' : 'Create'),
+                : Text(
+                    _isEditMode
+                        ? context.l10n.text('update')
+                        : context.l10n.text('create'),
+                  ),
           ),
         ),
       ),

@@ -1,150 +1,138 @@
-# Tudo em Casa — Project Context
+# Tudo em Casa — Agent Instructions
 
-## Overview
+This file is the entry point for AI coding agents working in this repository.
+Keep changes simple, offline-first, and consistent with the existing Flutter architecture.
 
-Tudo em Casa is an offline-first mobile application for household inventory management.
+## Read First
 
-The application allows users to:
-- register products
-- track expiration dates
-- manage household stock
-- receive local notifications
-- organize items by categories
+Before editing code, read:
+- `docs/environment.md` for Mise, Flutter, and Dart setup.
+- `docs/agent_guide.md` for architecture and implementation workflow.
+- `docs/testing.md` and `test/AGENTS.md` before writing or changing tests.
+- `docs/localization.md` and `docs/agent_i18n_context.md` before editing user-visible strings.
 
-The system must work fully offline.
+## Project Summary
 
-Do not use:
+Tudo em Casa is an offline-first Flutter mobile app for household inventory management.
+
+The MVP covers:
+- categories
+- product types
+- units
+- products
+- lots and expiration tracking
+- local notifications
+- local import/export
+
+Do not add:
 - authentication
-- cloud synchronization
-- external APIs
-- remote servers
-- multi-user support
+- backend services
+- cloud sync
+- remote APIs
+- multi-user behavior
+- AI features
 
----
+## Environment Setup for AI Agents
 
-## Technology Stack
+The Flutter toolchain is pinned by `mise.toml`.
+Do not trust bare `flutter` or `dart` from the system `PATH`.
 
-- Flutter 3.41.9 (stable)
-- Dart
-- SQLite
-- Drift ORM
+Verify the active toolchain from the repository root:
+
+```bash
+rtk mise current
+rtk mise exec -- flutter --version
+rtk mise exec -- dart --version
+```
+
+Use Mise for all Flutter and Dart commands:
+
+```bash
+rtk mise exec -- flutter pub get
+rtk mise exec -- flutter gen-l10n
+rtk mise exec -- dart run build_runner build --delete-conflicting-outputs
+rtk mise exec -- dart format --output=none --set-exit-if-changed .
+rtk mise exec -- flutter analyze
+rtk mise exec -- flutter test
+```
+
+If a sandbox blocks Flutter from writing under the Mise SDK cache, request approval and rerun the same `mise exec --` command. Do not fall back to system Flutter.
+
+## Architecture Rules
+
+Stack:
+- Flutter stable pinned by `mise.toml`
+- Dart bundled with that Flutter SDK
 - Riverpod
-- MVVM Architecture
+- Drift + SQLite
+- Material 3
+- MVVM with feature-based modules
 
-Use APIs compatible with Flutter 3.41.9 stable.
+Primary flow:
 
-Avoid:
-- deprecated APIs
-- outdated examples
-- legacy code
-
----
-
-## Architectural Principles
-
-- Prioritize simplicity
-- Avoid overengineering
-- Use separation of concerns
-- Follow Clean Code principles
-- Maintain low coupling
-- Use feature-based modular structure
-
----
-
-## State Management
-
-Use Riverpod for:
-- dependency injection
-- reactive state management
-
-Do not use:
-- Provider
-- GetX
-- BloC
-
----
-
-## Data Persistence
-
-Use Drift + SQLite.
+```text
+UI -> ViewModel -> Repository -> Database
+```
 
 Rules:
-- use strongly typed queries
-- avoid raw SQL whenever possible
-- access the database through repositories
+- UI must not access Drift/database directly.
+- Repositories centralize persistence and typed Drift queries.
+- ViewModels coordinate UI state and business actions, not rendering.
+- Providers expose dependencies; keep them small and logic-free.
+- Use Riverpod only. Do not introduce Provider, GetX, or BloC.
+- Keep feature code under `lib/features/<feature>/`.
+- Keep shared infrastructure under `lib/core/`.
 
----
+## Data Rules
+
+- Use Drift typed APIs whenever possible.
+- Avoid raw SQL unless Drift cannot express the query cleanly.
+- Preserve database table names, field names, and backup JSON keys unless an explicit migration is required.
+- Prefer relational models with optional related objects, for example `CategoryModel? category`.
+- Do not duplicate relational fields into flattened model variants.
+
+## UI Rules
+
+- Use clean, minimal Material 3 UI.
+- Prefer dedicated pages for create/edit forms.
+- Use dedicated selection pages for relational entities instead of large dropdowns.
+- Use modals only for confirmations, alerts, destructive warnings, or small bottom sheet tools.
+- Keep widgets and build methods small.
 
 ## Language Rules
 
-The entire codebase must use English.
-
-Use English for:
+All code and technical documentation must be in English:
 - classes
 - variables
 - methods
-- files
-- folders
-- database tables
-- database fields
+- files and folders
+- database tables and fields
 - comments
 - commits
-- technical documentation
+- technical docs
 
-Avoid mixing languages.
+The academic TCC article remains Brazilian Portuguese.
 
-Correct examples:
-- ProductRepository
-- ProductViewModel
-- fetchProducts()
-- expiration_date
+Use explicit names:
+- prefer `quantity`, `category`, `product`
+- avoid `qty`, `cat`, `prod`
 
-Incorrect examples:
-- ProdutoRepositorio
-- buscarProdutos()
-- data_validade
+## App Language Behavior
 
-Exceptions:
-- Flutter APIs
-- external libraries
-- official package names
+The app supports only:
+- Portuguese Brazil: `pt_BR`
+- English: `en`
 
-The academic article (TCC) must remain in Brazilian Portuguese.
+On first launch only, the app initializes and persists the language from the device locale:
+- device language code starting with `pt` -> `pt_BR`
+- any other device language -> `en`
 
----
+After the preference is saved, the app always uses the in-app language preference.
+Do not add a `System default` language option or reactively follow later device locale changes.
 
-## UI Guidelines
+## Scope and Simplicity
 
-- Clean and minimalist interface
-- Prioritize readability
-- Avoid excessive animations
-- Use Material 3
-
----
-
-## Code Style
-
-- Small widgets
-- Small methods
-- Explicit naming
-- Prefer composition over inheritance
-- Avoid unnecessary abbreviations
-
-Avoid:
-- qty
-- cat
-- prod
-
-Prefer:
-- quantity
-- category
-- product
-
----
-
-## Project Constraints
-
-This project is an academic final graduation project (TCC).
+This is an academic final graduation project.
 
 Priorities:
 1. readability
@@ -153,289 +141,50 @@ Priorities:
 4. offline reliability
 5. simplicity
 
-Do not introduce:
+Avoid:
 - unnecessary abstractions
 - excessive complexity
-- premature optimizations
+- premature optimization
+- unrelated refactors
 
----
+## Comments
 
-## Current Scope (MVP)
+Prefer self-explanatory code over comments.
 
-Implemented or planned:
-- categories
-- product types
-- units
-- products
-- expiration tracking
-- local notifications
-- export/import
-
-Not planned:
-- backend
-- login
-- synchronization
-- online features
-- AI features
-
----
-
-## Commit Convention
-
-Use Conventional Commits for all commits.
-
-Format:
-
-<type>: <short description>
-
-Examples:
-- feat: add product registration
-- fix: correct expiration date validation
-- refactor: simplify product repository
-- docs: update architecture documentation
-
----
-
-## Allowed Commit Types
-
-### feat
-
-Use for:
-- new features
-- new screens
-- new business logic
-- new functionality
-
-Example:
-- feat: add category creation
-
----
-
-### fix
-
-Use for:
-- bug fixes
-- incorrect behaviors
-- validation corrections
-- crashes
-
-Example:
-- fix: prevent invalid expiration date
-
----
-
-### refactor
-
-Use for:
-- code improvements
-- internal restructuring
-- readability improvements
-- architectural cleanup
-
-Do not use for new features.
-
-Example:
-- refactor: reorganize database providers
-
----
-
-### docs
-
-Use for:
-- documentation updates
-- markdown files
-- architecture notes
-- comments
-
-Example:
-- docs: update database structure
-
----
-
-### style
-
-Use for:
-- formatting
-- spacing
-- lint cleanup
-- non-functional visual code changes
-
-Do not use for UI features.
-
-Example:
-- style: format product page
-
----
-
-### chore
-
-Use for:
-- project setup
-- dependency updates
-- configuration changes
-- tooling
-- build configuration
-
-Example:
-- chore: add drift dependencies
-
----
-
-### test
-
-Use for:
-- unit tests
-- widget tests
-- integration tests
-
-Example:
-- test: add product repository tests
-
----
-
-## Commit Rules
-
-- Use English
-- Keep messages short and objective
-- Use lowercase commit types
-- Do not end commit messages with a period
-- Prefer one logical change per commit
-
-Avoid:
-- generic messages
-- large mixed commits
-- unclear descriptions
-
-Avoid examples:
-- update stuff
-- fixes
-- changes
-
-Prefer:
-- feat: add product list page
-- fix: correct unit selection validation
-
----
-
-## Comments Guidelines
-
-Prefer self-explanatory code over excessive comments.
-
-Code should be understandable through:
-- explicit naming
-- small methods
-- small widgets
-- clear responsibilities
-- clean architecture
-
-Avoid:
-- redundant comments
-- obvious comments
-- line-by-line explanations
-- comments that describe what the code is already clearly expressing
-
-Bad examples:
-
-```dart
-// Create category
-final category = Category();
-```
-
-```dart
-// Return categories list
-return categories;
-```
-
-Prefer:
-
-```dart
-final category = Category();
-```
-
-```dart
-return categories;
-```
-
-Comments are allowed only for:
+Comments are allowed for:
 - complex business rules
 - important architectural decisions
 - technical limitations
 - temporary workarounds with clear justification
 
-The project should prioritize:
-- readability
-- maintainability
-- explicit naming
-- clean structure
-
-Prefer clean code over commented code.
-
----
+Avoid redundant comments that restate the code.
 
 ## Testing
 
-The project uses automated tests.
+Tests must mirror `lib/` structure and respect the architecture.
 
-Official testing guidelines:
-- docs/testing.md
-- test/AGENTS.md
+Priority:
+1. repository tests
+2. ViewModel/provider tests
+3. critical widget tests
 
-Tests must:
-- mirror lib/ structure
-- follow architecture rules
-- prioritize readability and maintainability
+Run verification through Mise. Report any command that cannot run and include the exact reason.
 
----
+## Commits
 
-## Relational Modeling
+Use Conventional Commits in English:
 
-Prefer relational entities with optional related objects.
-
-Example:
-
-```dart
-final CategoryModel? category;
+```text
+<type>: <short description>
 ```
 
-Avoid:
-- duplicated relational models
-- flattened relationship fields
-- relationship-specific entity variants
+Allowed types:
+- `feat`
+- `fix`
+- `refactor`
+- `docs`
+- `style`
+- `chore`
+- `test`
 
----
-
-## Selection UX Pattern
-
-Avoid large dropdown selectors for relational entities.
-
-Prefer dedicated selection pages instead of dropdowns when selecting:
-- categories
-- product types
-- units
-- relational entities
-
-Preferred flow:
-
-Form Page
-→ Navigate to Selection Page
-→ User selects item
-→ Return selected entity
-→ Populate form field
-
-Reasons:
-- better mobile UX
-- better scalability
-- cleaner forms
-- easier future search/filter implementation
-- more consistent navigation behavior
-
-Requirements:
-- selection pages must support reactive lists
-- selection mode must not break existing CRUD flows
-- avoid duplicated selection pages
-- prefer reusable list/select behavior
-
-Avoid:
-- giant dropdowns
-- deeply nested selectors
-- modal-based relational selection
+Keep commits focused and do not end messages with a period.

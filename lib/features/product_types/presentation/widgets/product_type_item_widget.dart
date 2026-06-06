@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:tudo_em_casa/features/product_types/data/models/index.dart';
+import 'package:tudo_em_casa/l10n/localization_extension.dart';
 
 class ProductTypeItemWidget extends StatelessWidget {
   final ProductTypeModel productType;
@@ -32,19 +33,24 @@ class ProductTypeItemWidget extends StatelessWidget {
             )
           : null,
       title: Text(productType.name),
-      subtitle: Text('Category: ${productType.category?.name ?? 'Unknown'}'),
+      subtitle: Text(
+        context.l10n.withName(
+          'categoryWithName',
+          productType.category?.name ?? context.l10n.text('unknown'),
+        ),
+      ),
       trailing: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
           IconButton(
             icon: const Icon(Icons.edit),
             onPressed: onEdit,
-            tooltip: 'Edit',
+            tooltip: context.l10n.text('edit'),
           ),
           IconButton(
             icon: const Icon(Icons.delete),
             onPressed: onDelete,
-            tooltip: 'Delete',
+            tooltip: context.l10n.text('delete'),
           ),
         ],
       ),

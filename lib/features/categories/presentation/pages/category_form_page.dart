@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:tudo_em_casa/core/feedback/app_snackbar.dart';
 import 'package:tudo_em_casa/features/categories/data/models/index.dart';
 import 'package:tudo_em_casa/features/categories/presentation/viewmodels/index.dart';
+import 'package:tudo_em_casa/l10n/localization_extension.dart';
 
 class CategoryFormPage extends ConsumerStatefulWidget {
   final CategoryModel? category;
@@ -43,7 +44,7 @@ class _CategoryFormPageState extends ConsumerState<CategoryFormPage> {
     final name = _nameController.text.trim();
 
     if (name.isEmpty) {
-      AppSnackbar.error(context, 'Category name is required');
+      AppSnackbar.error(context, context.l10n.text('categoryNameRequired'));
       return;
     }
 
@@ -62,7 +63,7 @@ class _CategoryFormPageState extends ConsumerState<CategoryFormPage> {
       }
     } catch (error) {
       if (mounted) {
-        AppSnackbar.error(context, 'Failed to save category');
+        AppSnackbar.error(context, context.l10n.text('failedToSaveCategory'));
       }
       setState(() => _isSubmitting = false);
     }
@@ -75,7 +76,11 @@ class _CategoryFormPageState extends ConsumerState<CategoryFormPage> {
     return Scaffold(
       resizeToAvoidBottomInset: true,
       appBar: AppBar(
-        title: Text(_isEditMode ? 'Edit Category' : 'Create Category'),
+        title: Text(
+          _isEditMode
+              ? context.l10n.text('editCategory')
+              : context.l10n.text('createCategory'),
+        ),
       ),
       body: SafeArea(
         child: SingleChildScrollView(
@@ -88,8 +93,8 @@ class _CategoryFormPageState extends ConsumerState<CategoryFormPage> {
                 focusNode: _nameFocus,
                 enabled: !_isSubmitting,
                 decoration: InputDecoration(
-                  labelText: 'Category name',
-                  hintText: 'e.g., Fruits, Vegetables',
+                  labelText: context.l10n.text('categoryName'),
+                  hintText: context.l10n.text('categoryNameHint'),
                   border: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(8),
                   ),
@@ -119,7 +124,11 @@ class _CategoryFormPageState extends ConsumerState<CategoryFormPage> {
                         color: Colors.white,
                       ),
                     )
-                  : Text(_isEditMode ? 'Update' : 'Create'),
+                  : Text(
+                      _isEditMode
+                          ? context.l10n.text('update')
+                          : context.l10n.text('create'),
+                    ),
             ),
           ),
         ),

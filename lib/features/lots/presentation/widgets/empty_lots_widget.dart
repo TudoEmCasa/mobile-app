@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:tudo_em_casa/l10n/localization_extension.dart';
 
 class EmptyLotsWidget extends StatelessWidget {
   final VoidCallback onCreatePressed;
@@ -19,16 +20,19 @@ class EmptyLotsWidget extends StatelessWidget {
               color: Colors.grey.shade400,
             ),
             const SizedBox(height: 16),
-            Text('No lots yet', style: Theme.of(context).textTheme.titleLarge),
+            Text(
+              context.l10n.text('noLotsYet'),
+              style: Theme.of(context).textTheme.titleLarge,
+            ),
             const SizedBox(height: 8),
-            const Text(
-              'Add a lot to track quantities, units, and expiration dates.',
+            Text(
+              context.l10n.text('createLotEmptyMessage'),
               textAlign: TextAlign.center,
             ),
             const SizedBox(height: 16),
             ElevatedButton(
               onPressed: onCreatePressed,
-              child: const Text('Create Lot'),
+              child: Text(context.l10n.text('createLot')),
             ),
           ],
         ),

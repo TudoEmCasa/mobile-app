@@ -9,6 +9,7 @@ import 'package:tudo_em_casa/features/lots/presentation/viewmodels/index.dart';
 import 'package:tudo_em_casa/features/lots/presentation/widgets/index.dart';
 import 'package:tudo_em_casa/features/products/data/models/index.dart';
 import 'package:tudo_em_casa/features/products/presentation/viewmodels/product_details_viewmodel.dart';
+import 'package:tudo_em_casa/l10n/localization_extension.dart';
 
 class ProductDetailsPage extends ConsumerStatefulWidget {
   final int productId;
@@ -32,7 +33,7 @@ class _ProductDetailsPageState extends ConsumerState<ProductDetailsPage>
           data: (product) => product?.name,
           orElse: () => null,
         ) ??
-        'Product details';
+        context.l10n.text('productDetails');
 
     return Scaffold(
       appBar: AppBar(title: Text(productTitle)),
@@ -43,7 +44,7 @@ class _ProductDetailsPageState extends ConsumerState<ProductDetailsPage>
               : null,
           orElse: () => null,
         ),
-        tooltip: 'Add Lot',
+        tooltip: context.l10n.text('addLot'),
         child: const Icon(Icons.add),
       ),
       body: productAsync.when(
@@ -62,7 +63,7 @@ class _ProductDetailsPageState extends ConsumerState<ProductDetailsPage>
                   ),
                   const SizedBox(height: 16),
                   Text(
-                    'Product not found',
+                    context.l10n.text('productNotFound'),
                     style: Theme.of(context).textTheme.titleLarge,
                   ),
                 ],
@@ -72,9 +73,11 @@ class _ProductDetailsPageState extends ConsumerState<ProductDetailsPage>
 
           return lotsAsync.when(
             data: (lots) {
-              final productTypeName = product.productType?.name ?? 'Unknown';
+              final productTypeName =
+                  product.productType?.name ?? context.l10n.text('unknown');
               final categoryName =
-                  product.productType?.category?.name ?? 'Unknown';
+                  product.productType?.category?.name ??
+                  context.l10n.text('unknown');
 
               return ListView(
                 padding: const EdgeInsets.all(16),
@@ -90,15 +93,25 @@ class _ProductDetailsPageState extends ConsumerState<ProductDetailsPage>
                             style: Theme.of(context).textTheme.headlineSmall,
                           ),
                           const SizedBox(height: 8),
-                          Text('Product type: $productTypeName'),
+                          Text(
+                            context.l10n.withName(
+                              'productTypeWithName',
+                              productTypeName,
+                            ),
+                          ),
                           const SizedBox(height: 4),
-                          Text('Category: $categoryName'),
+                          Text(
+                            context.l10n.withName(
+                              'categoryWithName',
+                              categoryName,
+                            ),
+                          ),
                           const SizedBox(height: 12),
                           Text(
-                            'Lots: ${lots.length}',
+                            context.l10n.withCount('lotsCount', lots.length),
                             style: Theme.of(context).textTheme.titleMedium,
                           ),
-                          const Text('Inventory is tracked per lot below.'),
+                          Text(context.l10n.text('inventoryTrackedPerLot')),
                         ],
                       ),
                     ),
@@ -108,13 +121,13 @@ class _ProductDetailsPageState extends ConsumerState<ProductDetailsPage>
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
                       Text(
-                        'Lots',
+                        context.l10n.text('lots'),
                         style: Theme.of(context).textTheme.titleLarge,
                       ),
                       TextButton.icon(
                         onPressed: () => _navigateToLotForm(context, product),
                         icon: const Icon(Icons.add),
-                        label: const Text('Add lot'),
+                        label: Text(context.l10n.text('addLotLower')),
                       ),
                     ],
                   ),
@@ -142,7 +155,7 @@ class _ProductDetailsPageState extends ConsumerState<ProductDetailsPage>
             },
             loading: () => const Center(child: CircularProgressIndicator()),
             error: (error, stack) {
-              showLoadErrorFeedback('Failed to load lots');
+              showLoadErrorFeedback(context.l10n.text('failedToLoadLots'));
               return Center(
                 child: Column(
                   mainAxisAlignment: MainAxisAlignment.center,
@@ -154,7 +167,7 @@ class _ProductDetailsPageState extends ConsumerState<ProductDetailsPage>
                     ),
                     const SizedBox(height: 16),
                     Text(
-                      'Failed to load lots',
+                      context.l10n.text('failedToLoadLots'),
                       style: Theme.of(context).textTheme.titleLarge,
                     ),
                   ],
@@ -165,7 +178,7 @@ class _ProductDetailsPageState extends ConsumerState<ProductDetailsPage>
         },
         loading: () => const Center(child: CircularProgressIndicator()),
         error: (error, stack) {
-          showLoadErrorFeedback('Failed to load product');
+          showLoadErrorFeedback(context.l10n.text('failedToLoadProduct'));
           return Center(
             child: Column(
               mainAxisAlignment: MainAxisAlignment.center,
@@ -173,7 +186,7 @@ class _ProductDetailsPageState extends ConsumerState<ProductDetailsPage>
                 Icon(Icons.error_outline, size: 64, color: Colors.red.shade400),
                 const SizedBox(height: 16),
                 Text(
-                  'Failed to load product',
+                  context.l10n.text('failedToLoadProduct'),
                   style: Theme.of(context).textTheme.titleLarge,
                 ),
               ],
@@ -196,7 +209,12 @@ class _ProductDetailsPageState extends ConsumerState<ProductDetailsPage>
     );
 
     if (saved == true && context.mounted) {
-      AppSnackbar.success(context, lot == null ? 'Lot created' : 'Lot updated');
+      AppSnackbar.success(
+        context,
+        lot == null
+            ? context.l10n.text('lotCreated')
+            : context.l10n.text('lotUpdated'),
+      );
     }
   }
 
@@ -207,10 +225,10 @@ class _ProductDetailsPageState extends ConsumerState<ProductDetailsPage>
   ) async {
     final shouldDelete = await showAppConfirmationBottomSheet(
       context: context,
-      title: 'Delete Lot?',
-      message: 'Delete this lot? This action cannot be undone.',
-      confirmLabel: 'Delete',
-      cancelLabel: 'Cancel',
+      title: context.l10n.text('deleteLotTitle'),
+      message: context.l10n.text('deleteLotMessage'),
+      confirmLabel: context.l10n.text('delete'),
+      cancelLabel: context.l10n.text('cancel'),
       isDangerous: true,
     );
 
@@ -222,11 +240,11 @@ class _ProductDetailsPageState extends ConsumerState<ProductDetailsPage>
       final viewModel = ref.read(lotListViewModelProvider);
       await viewModel.deleteLot(lot.id);
       if (context.mounted) {
-        AppSnackbar.success(context, 'Lot removed');
+        AppSnackbar.success(context, context.l10n.text('lotRemoved'));
       }
     } catch (error) {
       if (context.mounted) {
-        AppSnackbar.error(context, 'Failed to delete lot');
+        AppSnackbar.error(context, context.l10n.text('failedToDeleteLot'));
       }
     }
   }
@@ -251,11 +269,14 @@ class _ProductDetailsPageState extends ConsumerState<ProductDetailsPage>
       await viewModel.consumeLotQuantity(lotId: lot.id, quantity: quantity);
 
       if (context.mounted) {
-        AppSnackbar.success(context, '${_formatQuantity(quantity)} used');
+        AppSnackbar.success(
+          context,
+          context.l10n.withQuantity('quantityUsed', _formatQuantity(quantity)),
+        );
       }
     } catch (error) {
       if (context.mounted) {
-        AppSnackbar.error(context, error.toString());
+        AppSnackbar.error(context, _quantityErrorMessage(context, error));
       }
     }
   }
@@ -280,11 +301,14 @@ class _ProductDetailsPageState extends ConsumerState<ProductDetailsPage>
       await viewModel.addLotQuantity(lotId: lot.id, quantity: quantity);
 
       if (context.mounted) {
-        AppSnackbar.success(context, '${_formatQuantity(quantity)} added');
+        AppSnackbar.success(
+          context,
+          context.l10n.withQuantity('quantityAdded', _formatQuantity(quantity)),
+        );
       }
     } catch (error) {
       if (context.mounted) {
-        AppSnackbar.error(context, error.toString());
+        AppSnackbar.error(context, _quantityErrorMessage(context, error));
       }
     }
   }
@@ -295,5 +319,27 @@ class _ProductDetailsPageState extends ConsumerState<ProductDetailsPage>
     }
 
     return quantity.toString();
+  }
+
+  String _quantityErrorMessage(BuildContext context, Object error) {
+    final message = error.toString();
+
+    if (message.contains('Quantity must be greater than zero')) {
+      return context.l10n.text('quantityMustBeGreaterThanZero');
+    }
+
+    if (message.contains('Insufficient quantity')) {
+      return context.l10n.text('insufficientQuantity');
+    }
+
+    if (message.contains('Lot not found')) {
+      return context.l10n.text('failedToLoadLots');
+    }
+
+    if (message.contains('Product not found')) {
+      return context.l10n.text('productNotFound');
+    }
+
+    return message;
   }
 }

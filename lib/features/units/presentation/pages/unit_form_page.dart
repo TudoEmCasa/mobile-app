@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:tudo_em_casa/core/feedback/app_snackbar.dart';
 import 'package:tudo_em_casa/features/units/data/models/index.dart';
 import 'package:tudo_em_casa/features/units/presentation/viewmodels/index.dart';
+import 'package:tudo_em_casa/l10n/localization_extension.dart';
 
 class UnitFormPage extends ConsumerStatefulWidget {
   final UnitModel? unit;
@@ -49,12 +50,12 @@ class _UnitFormPageState extends ConsumerState<UnitFormPage> {
     final symbol = _symbolController.text.trim();
 
     if (name.isEmpty) {
-      AppSnackbar.error(context, 'Unit name is required');
+      AppSnackbar.error(context, context.l10n.text('unitNameRequired'));
       return;
     }
 
     if (symbol.isEmpty) {
-      AppSnackbar.error(context, 'Unit symbol is required');
+      AppSnackbar.error(context, context.l10n.text('unitSymbolRequired'));
       return;
     }
 
@@ -72,7 +73,7 @@ class _UnitFormPageState extends ConsumerState<UnitFormPage> {
       if (mounted) Navigator.of(context).pop(true);
     } catch (error) {
       if (mounted) {
-        AppSnackbar.error(context, 'Failed to save unit');
+        AppSnackbar.error(context, context.l10n.text('failedToSaveUnit'));
       }
       setState(() => _isSubmitting = false);
     }
@@ -84,7 +85,13 @@ class _UnitFormPageState extends ConsumerState<UnitFormPage> {
 
     return Scaffold(
       resizeToAvoidBottomInset: true,
-      appBar: AppBar(title: Text(_isEditMode ? 'Edit Unit' : 'Create Unit')),
+      appBar: AppBar(
+        title: Text(
+          _isEditMode
+              ? context.l10n.text('editUnit')
+              : context.l10n.text('createUnit'),
+        ),
+      ),
       body: SafeArea(
         child: SingleChildScrollView(
           padding: const EdgeInsets.all(24.0),
@@ -96,8 +103,8 @@ class _UnitFormPageState extends ConsumerState<UnitFormPage> {
                 focusNode: _nameFocus,
                 enabled: !_isSubmitting,
                 decoration: InputDecoration(
-                  labelText: 'Unit name',
-                  hintText: 'e.g., Kilogram, Liter',
+                  labelText: context.l10n.text('unitName'),
+                  hintText: context.l10n.text('unitNameHint'),
                   border: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(8),
                   ),
@@ -109,8 +116,8 @@ class _UnitFormPageState extends ConsumerState<UnitFormPage> {
                 controller: _symbolController,
                 enabled: !_isSubmitting,
                 decoration: InputDecoration(
-                  labelText: 'Symbol',
-                  hintText: 'e.g., kg, L',
+                  labelText: context.l10n.text('unitSymbol'),
+                  hintText: context.l10n.text('unitSymbolHint'),
                   border: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(8),
                   ),
@@ -140,7 +147,11 @@ class _UnitFormPageState extends ConsumerState<UnitFormPage> {
                         color: Colors.white,
                       ),
                     )
-                  : Text(_isEditMode ? 'Update' : 'Create'),
+                  : Text(
+                      _isEditMode
+                          ? context.l10n.text('update')
+                          : context.l10n.text('create'),
+                    ),
             ),
           ),
         ),

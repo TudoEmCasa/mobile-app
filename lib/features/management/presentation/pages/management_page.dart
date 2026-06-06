@@ -3,6 +3,7 @@ import 'package:tudo_em_casa/features/categories/presentation/pages/category_lis
 import 'package:tudo_em_casa/features/management/presentation/widgets/management_option_card.dart';
 import 'package:tudo_em_casa/features/product_types/presentation/pages/product_type_list_page.dart';
 import 'package:tudo_em_casa/features/units/presentation/pages/unit_list_page.dart';
+import 'package:tudo_em_casa/l10n/localization_extension.dart';
 
 class ManagementPage extends StatelessWidget {
   const ManagementPage({super.key});
@@ -17,12 +18,12 @@ class ManagementPage extends StatelessWidget {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Text(
-                'Management',
+                context.l10n.text('management'),
                 style: Theme.of(context).textTheme.headlineMedium,
               ),
               const SizedBox(height: 4),
               Text(
-                'Manage application structure',
+                context.l10n.text('managementSubtitle'),
                 style: Theme.of(context).textTheme.bodyMedium,
               ),
               const SizedBox(height: 16),
@@ -31,22 +32,26 @@ class ManagementPage extends StatelessWidget {
                   children: [
                     ManagementOptionCard(
                       icon: Icons.category_outlined,
-                      title: 'Categories',
-                      subtitle: 'Manage product organization',
+                      title: context.l10n.text('categories'),
+                      subtitle: context.l10n.text(
+                        'categoriesManagementSubtitle',
+                      ),
                       onTap: () => _navigateToCategories(context),
                     ),
                     const SizedBox(height: 12),
                     ManagementOptionCard(
                       icon: Icons.inventory_2_outlined,
-                      title: 'Product Types',
-                      subtitle: 'Manage available product types',
+                      title: context.l10n.text('productTypes'),
+                      subtitle: context.l10n.text(
+                        'productTypesManagementSubtitle',
+                      ),
                       onTap: () => _navigateToProductTypes(context),
                     ),
                     const SizedBox(height: 12),
                     ManagementOptionCard(
                       icon: Icons.straighten_outlined,
-                      title: 'Units',
-                      subtitle: 'Manage measurement units',
+                      title: context.l10n.text('units'),
+                      subtitle: context.l10n.text('unitsManagementSubtitle'),
                       onTap: () => _navigateToUnits(context),
                     ),
                   ],

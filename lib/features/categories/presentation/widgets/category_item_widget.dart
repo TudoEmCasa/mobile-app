@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:tudo_em_casa/features/categories/data/models/index.dart';
+import 'package:tudo_em_casa/l10n/localization_extension.dart';
 
 class CategoryItemWidget extends StatelessWidget {
   final CategoryModel category;
@@ -38,12 +39,12 @@ class CategoryItemWidget extends StatelessWidget {
           IconButton(
             icon: const Icon(Icons.edit),
             onPressed: onEdit,
-            tooltip: 'Edit',
+            tooltip: context.l10n.text('edit'),
           ),
           IconButton(
             icon: const Icon(Icons.delete),
             onPressed: onDelete,
-            tooltip: 'Delete',
+            tooltip: context.l10n.text('delete'),
           ),
         ],
       ),

@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:tudo_em_casa/core/utils/date_formatter.dart';
 import 'package:tudo_em_casa/features/lots/data/models/lot_model.dart';
 import 'package:tudo_em_casa/features/products/data/models/product_model.dart';
+import 'package:tudo_em_casa/l10n/localization_extension.dart';
 
 class ProductItemWidget extends StatelessWidget {
   final ProductModel product;
@@ -19,7 +20,7 @@ class ProductItemWidget extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final lotSummary = _buildLotSummary();
+    final lotSummary = _buildLotSummary(context);
 
     return Card(
       margin: const EdgeInsets.symmetric(vertical: 6),
@@ -44,12 +45,12 @@ class ProductItemWidget extends StatelessWidget {
               children: [
                 IconButton(
                   onPressed: onEdit,
-                  tooltip: 'Edit product',
+                  tooltip: context.l10n.text('editProductTooltip'),
                   icon: const Icon(Icons.edit),
                 ),
                 IconButton(
                   onPressed: onDelete,
-                  tooltip: 'Delete product',
+                  tooltip: context.l10n.text('deleteProductTooltip'),
                   icon: const Icon(Icons.delete),
                 ),
               ],
@@ -60,19 +61,25 @@ class ProductItemWidget extends StatelessWidget {
     );
   }
 
-  String _buildLotSummary() {
+  String _buildLotSummary(BuildContext context) {
     final lots = product.lots;
 
     if (lots == null || lots.isEmpty) {
-      return 'No lots registered';
+      return context.l10n.text('noLotsRegistered');
     }
 
     final lot = _selectNearestExpiringLot(lots);
     final quantityText = _formatQuantity(lot.quantity);
-    final unitText = lot.unit?.symbol ?? lot.unit?.name ?? 'units';
+    final unitText =
+        lot.unit?.symbol ??
+        lot.unit?.name ??
+        context.l10n.text('unitsFallback');
     final expirationText = lot.expirationDate != null
-        ? DateFormatter.formatDate(lot.expirationDate!)
-        : 'No expiration date';
+        ? DateFormatter.formatDate(
+            lot.expirationDate!,
+            locale: Localizations.localeOf(context).toString(),
+          )
+        : context.l10n.text('noExpirationDate');
 
     return '$quantityText $unitText • $expirationText';
   }
