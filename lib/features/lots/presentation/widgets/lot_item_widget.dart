@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:tudo_em_casa/core/utils/date_formatter.dart';
 import 'package:tudo_em_casa/features/lots/data/models/index.dart';
+import 'package:tudo_em_casa/l10n/localization_extension.dart';
 
 class LotItemWidget extends StatelessWidget {
   final LotModel lot;
@@ -23,10 +24,16 @@ class LotItemWidget extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final quantityText = _formatQuantity(lot.quantity);
-    final unitText = lot.unit?.symbol ?? lot.unit?.name ?? 'units';
+    final unitText =
+        lot.unit?.symbol ??
+        lot.unit?.name ??
+        context.l10n.text('unitsFallback');
     final expirationText = lot.expirationDate != null
-        ? DateFormatter.formatDate(lot.expirationDate!)
-        : 'No expiration';
+        ? DateFormatter.formatDate(
+            lot.expirationDate!,
+            locale: Localizations.localeOf(context).toString(),
+          )
+        : context.l10n.text('noExpiration');
 
     return Card(
       margin: const EdgeInsets.symmetric(vertical: 6),
@@ -35,28 +42,30 @@ class LotItemWidget extends StatelessWidget {
         contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
         leading: const Icon(Icons.sell_outlined),
         title: Text('$quantityText $unitText'),
-        subtitle: Text('Expires: $expirationText'),
+        subtitle: Text(
+          context.l10n.withDate('expiresWithDate', expirationText),
+        ),
         trailing: Wrap(
           spacing: 2,
           children: [
             IconButton(
               onPressed: onAddQuantity,
-              tooltip: 'Add quantity',
+              tooltip: context.l10n.text('addQuantity'),
               icon: const Icon(Icons.add_circle_outline),
             ),
             IconButton(
               onPressed: onUseQuantity,
-              tooltip: 'Use quantity',
+              tooltip: context.l10n.text('useQuantity'),
               icon: const Icon(Icons.remove_circle_outline),
             ),
             IconButton(
               onPressed: onEdit,
-              tooltip: 'Edit lot',
+              tooltip: context.l10n.text('editLotTooltip'),
               icon: const Icon(Icons.edit),
             ),
             IconButton(
               onPressed: onDelete,
-              tooltip: 'Delete lot',
+              tooltip: context.l10n.text('deleteLotTooltip'),
               icon: const Icon(Icons.delete),
             ),
           ],

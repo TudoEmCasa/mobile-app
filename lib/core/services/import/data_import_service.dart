@@ -58,11 +58,13 @@ class DataImportService {
     PickBackupFileCallback? pickBackupFile,
   }) : _pickBackupFile = pickBackupFile ?? _defaultPickBackupFile;
 
-  Future<BackupImportPayload?> pickBackupFile() async {
+  Future<BackupImportPayload?> pickBackupFile({String? dialogTitle}) async {
     _logStage('file picker opened');
 
     try {
-      final bytes = await _pickBackupFile(dialogTitle: 'Import data backup');
+      final bytes = await _pickBackupFile(
+        dialogTitle: dialogTitle ?? 'Import data backup',
+      );
 
       if (bytes == null) {
         _logStage('file selection canceled');

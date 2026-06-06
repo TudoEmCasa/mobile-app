@@ -1,14 +1,17 @@
 import 'package:flutter/material.dart';
+import 'package:tudo_em_casa/l10n/localization_extension.dart';
 
 Future<bool> showAppConfirmationBottomSheet({
   required BuildContext context,
   required String title,
   String? message,
-  String confirmLabel = 'Confirm',
-  String cancelLabel = 'Cancel',
+  String? confirmLabel,
+  String? cancelLabel,
   bool isDangerous = false,
 }) async {
   final theme = Theme.of(context);
+  final resolvedConfirmLabel = confirmLabel ?? context.l10n.text('confirm');
+  final resolvedCancelLabel = cancelLabel ?? context.l10n.text('cancel');
 
   final result = await showModalBottomSheet<bool>(
     context: context,
@@ -57,7 +60,7 @@ Future<bool> showAppConfirmationBottomSheet({
                   : FilledButton.styleFrom(
                       minimumSize: const Size.fromHeight(48),
                     ),
-              child: Text(confirmLabel),
+              child: Text(resolvedConfirmLabel),
             ),
             const SizedBox(height: 8),
             OutlinedButton(
@@ -65,7 +68,7 @@ Future<bool> showAppConfirmationBottomSheet({
               style: OutlinedButton.styleFrom(
                 minimumSize: const Size.fromHeight(48),
               ),
-              child: Text(cancelLabel),
+              child: Text(resolvedCancelLabel),
             ),
           ],
         ),

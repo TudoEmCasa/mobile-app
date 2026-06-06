@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:tudo_em_casa/features/management/presentation/pages/management_page.dart';
 import 'package:tudo_em_casa/features/products/presentation/pages/product_list_page.dart';
 import 'package:tudo_em_casa/features/settings/presentation/pages/settings_page.dart';
+import 'package:tudo_em_casa/l10n/localization_extension.dart';
 
 final appShellTabIndexProvider =
     NotifierProvider<AppShellTabIndexNotifier, int>(
@@ -38,21 +39,21 @@ class AppShellPage extends ConsumerWidget {
         onDestinationSelected: (index) {
           ref.read(appShellTabIndexProvider.notifier).setIndex(index);
         },
-        destinations: const [
+        destinations: [
           NavigationDestination(
-            icon: Icon(Icons.inventory_2_outlined),
-            selectedIcon: Icon(Icons.inventory_2),
-            label: 'Products',
+            icon: const Icon(Icons.inventory_2_outlined),
+            selectedIcon: const Icon(Icons.inventory_2),
+            label: context.l10n.text('products'),
           ),
           NavigationDestination(
-            icon: Icon(Icons.dashboard_customize_outlined),
-            selectedIcon: Icon(Icons.dashboard_customize),
-            label: 'Management',
+            icon: const Icon(Icons.dashboard_customize_outlined),
+            selectedIcon: const Icon(Icons.dashboard_customize),
+            label: context.l10n.text('management'),
           ),
           NavigationDestination(
-            icon: Icon(Icons.settings_outlined),
-            selectedIcon: Icon(Icons.settings),
-            label: 'Settings',
+            icon: const Icon(Icons.settings_outlined),
+            selectedIcon: const Icon(Icons.settings),
+            label: context.l10n.text('settings'),
           ),
         ],
       ),

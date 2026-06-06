@@ -1,17 +1,24 @@
 # tudo_em_casa
 
-A new Flutter project.
+Offline-first Flutter mobile app for household inventory management.
 
 ## Getting Started
 
-This project is a starting point for a Flutter application.
+This project uses Mise to pin the Flutter toolchain. Before running Flutter or Dart commands, install and verify the configured tools:
 
-A few resources to get you started if this is your first Flutter project:
+```bash
+mise install
+mise current
+mise exec -- flutter --version
+mise exec -- dart --version
+```
 
-- [Learn Flutter](https://docs.flutter.dev/get-started/learn-flutter)
-- [Write your first Flutter app](https://docs.flutter.dev/get-started/codelab)
-- [Flutter learning resources](https://docs.flutter.dev/reference/learning-resources)
+Use Mise for project commands:
 
-For help getting started with Flutter development, view the
-[online documentation](https://docs.flutter.dev/), which offers tutorials,
-samples, guidance on mobile development, and a full API reference.
+```bash
+mise exec -- flutter pub get
+mise exec -- flutter analyze
+mise exec -- flutter test
+```
+
+Environment details and troubleshooting are documented in `docs/environment.md`.

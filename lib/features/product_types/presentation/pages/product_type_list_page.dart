@@ -7,16 +7,17 @@ import 'package:tudo_em_casa/features/product_types/data/models/index.dart';
 import 'package:tudo_em_casa/features/product_types/presentation/pages/product_type_form_page.dart';
 import 'package:tudo_em_casa/features/product_types/presentation/viewmodels/index.dart';
 import 'package:tudo_em_casa/features/product_types/presentation/widgets/index.dart';
+import 'package:tudo_em_casa/l10n/localization_extension.dart';
 
 class ProductTypeListPage extends ConsumerStatefulWidget {
   final bool selectionMode;
-  final String selectionTitle;
+  final String? selectionTitle;
   final int? selectedProductTypeId;
 
   const ProductTypeListPage({
     super.key,
     this.selectionMode = false,
-    this.selectionTitle = 'Select Product Type',
+    this.selectionTitle,
     this.selectedProductTypeId,
   });
 
@@ -34,7 +35,9 @@ class _ProductTypeListPageState extends ConsumerState<ProductTypeListPage>
     return Scaffold(
       appBar: AppBar(
         title: Text(
-          widget.selectionMode ? widget.selectionTitle : 'Product Types',
+          widget.selectionMode
+              ? widget.selectionTitle ?? context.l10n.text('selectProductType')
+              : context.l10n.text('productTypes'),
         ),
       ),
       body: productTypesAsync.when(
@@ -68,7 +71,7 @@ class _ProductTypeListPageState extends ConsumerState<ProductTypeListPage>
         },
         loading: () => const Center(child: CircularProgressIndicator()),
         error: (error, stackTrace) {
-          showLoadErrorFeedback('Failed to load product types');
+          showLoadErrorFeedback(context.l10n.text('failedToLoadProductTypes'));
 
           return Center(
             child: Column(
@@ -77,7 +80,7 @@ class _ProductTypeListPageState extends ConsumerState<ProductTypeListPage>
                 Icon(Icons.error_outline, size: 64, color: Colors.red.shade400),
                 const SizedBox(height: 16),
                 Text(
-                  'Failed to load product types',
+                  context.l10n.text('failedToLoadProductTypes'),
                   style: Theme.of(context).textTheme.titleLarge,
                 ),
               ],
@@ -87,7 +90,7 @@ class _ProductTypeListPageState extends ConsumerState<ProductTypeListPage>
       ),
       floatingActionButton: FloatingActionButton(
         onPressed: () => _navigateToProductTypeForm(context),
-        tooltip: 'Add Product Type',
+        tooltip: context.l10n.text('addProductType'),
         child: const Icon(Icons.add),
       ),
     );
@@ -106,7 +109,9 @@ class _ProductTypeListPageState extends ConsumerState<ProductTypeListPage>
     if (saved == true && context.mounted) {
       AppSnackbar.success(
         context,
-        productType == null ? 'Product type created' : 'Product type updated',
+        productType == null
+            ? context.l10n.text('productTypeCreated')
+            : context.l10n.text('productTypeUpdated'),
       );
     }
   }
@@ -118,10 +123,13 @@ class _ProductTypeListPageState extends ConsumerState<ProductTypeListPage>
   ) async {
     final shouldDelete = await showAppConfirmationBottomSheet(
       context: context,
-      title: 'Delete Product Type?',
-      message: 'Delete "${productType.name}"? This action cannot be undone.',
-      confirmLabel: 'Delete',
-      cancelLabel: 'Cancel',
+      title: context.l10n.text('deleteProductTypeTitle'),
+      message: context.l10n.withName(
+        'deleteNamedEntityMessage',
+        productType.name,
+      ),
+      confirmLabel: context.l10n.text('delete'),
+      cancelLabel: context.l10n.text('cancel'),
       isDangerous: true,
     );
 
@@ -133,11 +141,14 @@ class _ProductTypeListPageState extends ConsumerState<ProductTypeListPage>
       final viewModel = ref.read(productTypeListViewModelProvider);
       await viewModel.deleteProductType(productType.id);
       if (context.mounted) {
-        AppSnackbar.success(context, 'Product type removed');
+        AppSnackbar.success(context, context.l10n.text('productTypeRemoved'));
       }
     } catch (error) {
       if (context.mounted) {
-        AppSnackbar.error(context, 'Failed to delete product type');
+        AppSnackbar.error(
+          context,
+          context.l10n.text('failedToDeleteProductType'),
+        );
       }
     }
   }

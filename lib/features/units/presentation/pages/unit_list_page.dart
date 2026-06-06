@@ -8,16 +8,17 @@ import 'package:tudo_em_casa/features/units/data/providers/index.dart';
 import 'package:tudo_em_casa/features/units/presentation/pages/unit_form_page.dart';
 import 'package:tudo_em_casa/features/units/presentation/viewmodels/index.dart';
 import 'package:tudo_em_casa/features/units/presentation/widgets/index.dart';
+import 'package:tudo_em_casa/l10n/localization_extension.dart';
 
 class UnitListPage extends ConsumerStatefulWidget {
   final bool selectionMode;
-  final String selectionTitle;
+  final String? selectionTitle;
   final int? selectedUnitId;
 
   const UnitListPage({
     super.key,
     this.selectionMode = false,
-    this.selectionTitle = 'Select Unit',
+    this.selectionTitle,
     this.selectedUnitId,
   });
 
@@ -33,7 +34,11 @@ class _UnitListPageState extends ConsumerState<UnitListPage>
 
     return Scaffold(
       appBar: AppBar(
-        title: Text(widget.selectionMode ? widget.selectionTitle : 'Units'),
+        title: Text(
+          widget.selectionMode
+              ? widget.selectionTitle ?? context.l10n.text('selectUnit')
+              : context.l10n.text('units'),
+        ),
       ),
       body: unitsAsync.when(
         data: (units) {
@@ -64,7 +69,7 @@ class _UnitListPageState extends ConsumerState<UnitListPage>
         },
         loading: () => const Center(child: CircularProgressIndicator()),
         error: (error, stackTrace) {
-          showLoadErrorFeedback('Failed to load units');
+          showLoadErrorFeedback(context.l10n.text('failedToLoadUnits'));
 
           return Center(
             child: Column(
@@ -73,7 +78,7 @@ class _UnitListPageState extends ConsumerState<UnitListPage>
                 Icon(Icons.error_outline, size: 64, color: Colors.red.shade400),
                 const SizedBox(height: 16),
                 Text(
-                  'Failed to load units',
+                  context.l10n.text('failedToLoadUnits'),
                   style: Theme.of(context).textTheme.titleLarge,
                 ),
               ],
@@ -83,7 +88,7 @@ class _UnitListPageState extends ConsumerState<UnitListPage>
       ),
       floatingActionButton: FloatingActionButton(
         onPressed: () => _navigateToUnitForm(context),
-        tooltip: 'Add Unit',
+        tooltip: context.l10n.text('addUnit'),
         child: const Icon(Icons.add),
       ),
     );
@@ -100,7 +105,9 @@ class _UnitListPageState extends ConsumerState<UnitListPage>
     if (saved == true && context.mounted) {
       AppSnackbar.success(
         context,
-        unit == null ? 'Unit created' : 'Unit updated',
+        unit == null
+            ? context.l10n.text('unitCreated')
+            : context.l10n.text('unitUpdated'),
       );
     }
   }
@@ -112,10 +119,10 @@ class _UnitListPageState extends ConsumerState<UnitListPage>
   ) async {
     final shouldDelete = await showAppConfirmationBottomSheet(
       context: context,
-      title: 'Delete Unit?',
-      message: 'Delete "${unit.name}"? This action cannot be undone.',
-      confirmLabel: 'Delete',
-      cancelLabel: 'Cancel',
+      title: context.l10n.text('deleteUnitTitle'),
+      message: context.l10n.withName('deleteNamedEntityMessage', unit.name),
+      confirmLabel: context.l10n.text('delete'),
+      cancelLabel: context.l10n.text('cancel'),
       isDangerous: true,
     );
 
@@ -127,11 +134,11 @@ class _UnitListPageState extends ConsumerState<UnitListPage>
       final viewModel = ref.read(unitListViewModelProvider);
       await viewModel.deleteUnit(unit.id);
       if (context.mounted) {
-        AppSnackbar.success(context, 'Unit removed');
+        AppSnackbar.success(context, context.l10n.text('unitRemoved'));
       }
     } catch (error) {
       if (context.mounted) {
-        AppSnackbar.error(context, 'Failed to delete unit');
+        AppSnackbar.error(context, context.l10n.text('failedToDeleteUnit'));
       }
     }
   }

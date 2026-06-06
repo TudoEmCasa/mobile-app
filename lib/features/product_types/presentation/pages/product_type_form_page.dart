@@ -6,6 +6,7 @@ import 'package:tudo_em_casa/features/categories/data/providers/index.dart';
 import 'package:tudo_em_casa/features/categories/presentation/pages/index.dart';
 import 'package:tudo_em_casa/features/product_types/data/models/index.dart';
 import 'package:tudo_em_casa/features/product_types/presentation/viewmodels/index.dart';
+import 'package:tudo_em_casa/l10n/localization_extension.dart';
 
 class ProductTypeFormPage extends ConsumerStatefulWidget {
   final ProductTypeModel? productType;
@@ -51,12 +52,12 @@ class _ProductTypeFormPageState extends ConsumerState<ProductTypeFormPage> {
     final name = _nameController.text.trim();
 
     if (name.isEmpty) {
-      AppSnackbar.error(context, 'Product type name is required');
+      AppSnackbar.error(context, context.l10n.text('productTypeNameRequired'));
       return;
     }
 
     if (_selectedCategoryId == null) {
-      AppSnackbar.error(context, 'Category is required');
+      AppSnackbar.error(context, context.l10n.text('categoryRequired'));
       return;
     }
 
@@ -78,7 +79,10 @@ class _ProductTypeFormPageState extends ConsumerState<ProductTypeFormPage> {
       }
     } catch (error) {
       if (mounted) {
-        AppSnackbar.error(context, 'Failed to save product type');
+        AppSnackbar.error(
+          context,
+          context.l10n.text('failedToSaveProductType'),
+        );
       }
       setState(() => _isSubmitting = false);
     }
@@ -89,7 +93,7 @@ class _ProductTypeFormPageState extends ConsumerState<ProductTypeFormPage> {
       MaterialPageRoute(
         builder: (context) => CategoryListPage(
           selectionMode: true,
-          selectionTitle: 'Select Category',
+          selectionTitle: context.l10n.text('selectCategory'),
           selectedCategoryId: _selectedCategoryId,
         ),
       ),
@@ -131,7 +135,11 @@ class _ProductTypeFormPageState extends ConsumerState<ProductTypeFormPage> {
     return Scaffold(
       resizeToAvoidBottomInset: true,
       appBar: AppBar(
-        title: Text(_isEditMode ? 'Edit Product Type' : 'Create Product Type'),
+        title: Text(
+          _isEditMode
+              ? context.l10n.text('editProductType')
+              : context.l10n.text('createProductType'),
+        ),
       ),
       body: SafeArea(
         child: SingleChildScrollView(
@@ -144,8 +152,8 @@ class _ProductTypeFormPageState extends ConsumerState<ProductTypeFormPage> {
                 focusNode: _nameFocus,
                 enabled: !_isSubmitting,
                 decoration: InputDecoration(
-                  labelText: 'Product type name',
-                  hintText: 'e.g., Milk, Cheese',
+                  labelText: context.l10n.text('productTypeName'),
+                  hintText: context.l10n.text('productTypeNameHint'),
                   border: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(8),
                   ),
@@ -158,7 +166,7 @@ class _ProductTypeFormPageState extends ConsumerState<ProductTypeFormPage> {
                 borderRadius: BorderRadius.circular(8),
                 child: InputDecorator(
                   decoration: InputDecoration(
-                    labelText: 'Category',
+                    labelText: context.l10n.text('categoryLabel'),
                     border: OutlineInputBorder(
                       borderRadius: BorderRadius.circular(8),
                     ),
@@ -167,7 +175,7 @@ class _ProductTypeFormPageState extends ConsumerState<ProductTypeFormPage> {
                   child: Text(
                     selectedCategoryFromList != null
                         ? selectedCategoryFromList.name
-                        : 'Select category',
+                        : context.l10n.text('selectCategoryLower'),
                     style: selectedCategoryFromList != null
                         ? null
                         : Theme.of(context).textTheme.bodyMedium?.copyWith(
@@ -198,7 +206,11 @@ class _ProductTypeFormPageState extends ConsumerState<ProductTypeFormPage> {
                         color: Colors.white,
                       ),
                     )
-                  : Text(_isEditMode ? 'Update' : 'Create'),
+                  : Text(
+                      _isEditMode
+                          ? context.l10n.text('update')
+                          : context.l10n.text('create'),
+                    ),
             ),
           ),
         ),

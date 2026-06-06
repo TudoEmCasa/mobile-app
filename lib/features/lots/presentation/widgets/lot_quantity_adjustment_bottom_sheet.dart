@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:tudo_em_casa/features/lots/data/models/index.dart';
+import 'package:tudo_em_casa/l10n/localization_extension.dart';
 
 enum LotQuantityAdjustmentMode { add, consume }
 
@@ -89,22 +90,22 @@ class _LotQuantityAdjustmentSheetState
     final text = _quantityController.text.trim();
 
     if (text.isEmpty) {
-      return 'Enter a quantity';
+      return context.l10n.text('enterQuantity');
     }
 
     final quantity = double.tryParse(text);
 
     if (quantity == null || !quantity.isFinite) {
-      return 'Enter a valid quantity';
+      return context.l10n.text('enterValidQuantity');
     }
 
     if (quantity <= 0) {
-      return 'Quantity must be greater than zero';
+      return context.l10n.text('quantityMustBeGreaterThanZero');
     }
 
     if (widget.mode == LotQuantityAdjustmentMode.consume &&
         quantity > _currentQuantity) {
-      return 'Insufficient quantity';
+      return context.l10n.text('insufficientQuantity');
     }
 
     return null;
@@ -126,20 +127,20 @@ class _LotQuantityAdjustmentSheetState
 
   String get _title {
     return widget.mode == LotQuantityAdjustmentMode.consume
-        ? 'Consume quantity'
-        : 'Add quantity';
+        ? context.l10n.text('consumeQuantity')
+        : context.l10n.text('addQuantity');
   }
 
   String get _quantityLabel {
     return widget.mode == LotQuantityAdjustmentMode.consume
-        ? 'Quantity to use'
-        : 'Quantity to add';
+        ? context.l10n.text('quantityToUse')
+        : context.l10n.text('quantityToAdd');
   }
 
   String get _previewLabel {
     return widget.mode == LotQuantityAdjustmentMode.consume
-        ? 'Remaining'
-        : 'New total';
+        ? context.l10n.text('remaining')
+        : context.l10n.text('newTotal');
   }
 
   void _useAllQuantity() {
@@ -177,7 +178,7 @@ class _LotQuantityAdjustmentSheetState
     final unitName = widget.lot.unit?.name.trim();
 
     if (unitName == null || unitName.isEmpty) {
-      return 'units';
+      return context.l10n.text('unitsFallback');
     }
 
     final lowered = unitName.toLowerCase();
@@ -224,12 +225,16 @@ class _LotQuantityAdjustmentSheetState
                 Text(_title, style: theme.textTheme.titleMedium),
                 const SizedBox(height: 4),
                 Text(
-                  widget.lot.unit?.name ?? 'Lot',
+                  widget.lot.unit?.name ?? context.l10n.text('lotFallback'),
                   style: theme.textTheme.titleLarge,
                 ),
                 const SizedBox(height: 4),
                 Text(
-                  'Current: ${_formatQuantity(_currentQuantity)} ${_unitLabel(_currentQuantity)}',
+                  context.l10n.withQuantityAndUnit(
+                    'currentQuantity',
+                    _formatQuantity(_currentQuantity),
+                    _unitLabel(_currentQuantity),
+                  ),
                   style: theme.textTheme.bodyMedium,
                 ),
                 const SizedBox(height: 12),
@@ -265,7 +270,7 @@ class _LotQuantityAdjustmentSheetState
                                 minimumSize: const Size(0, 36),
                                 tapTargetSize: MaterialTapTargetSize.shrinkWrap,
                               ),
-                              child: const Text('Use all'),
+                              child: Text(context.l10n.text('useAll')),
                             ),
                           )
                         : null,
@@ -274,8 +279,16 @@ class _LotQuantityAdjustmentSheetState
                 const SizedBox(height: 10),
                 Text(
                   previewQuantity != null
-                      ? '$_previewLabel: ${_formatQuantity(previewQuantity)} ${_unitLabel(previewQuantity)}'
-                      : '$_previewLabel: --',
+                      ? context.l10n.withPreview(
+                          'previewQuantity',
+                          _previewLabel,
+                          _formatQuantity(previewQuantity),
+                          _unitLabel(previewQuantity),
+                        )
+                      : context.l10n.withLabel(
+                          'emptyPreviewQuantity',
+                          _previewLabel,
+                        ),
                   style: theme.textTheme.bodySmall?.copyWith(
                     color: theme.colorScheme.onSurfaceVariant,
                   ),
@@ -286,7 +299,7 @@ class _LotQuantityAdjustmentSheetState
                   style: FilledButton.styleFrom(
                     minimumSize: const Size.fromHeight(44),
                   ),
-                  child: const Text('Confirm'),
+                  child: Text(context.l10n.text('confirm')),
                 ),
               ],
             ),

@@ -11,7 +11,7 @@ class SettingsViewModel extends Notifier<bool> {
   @override
   bool build() => false;
 
-  Future<String?> exportData() async {
+  Future<String?> exportData({String? dialogTitle}) async {
     if (state) {
       throw StateError('Export already in progress');
     }
@@ -19,13 +19,15 @@ class SettingsViewModel extends Notifier<bool> {
     state = true;
 
     try {
-      return ref.read(dataExportServiceProvider).exportData();
+      return ref
+          .read(dataExportServiceProvider)
+          .exportData(dialogTitle: dialogTitle);
     } finally {
       state = false;
     }
   }
 
-  Future<BackupImportPayload?> pickImportData() async {
+  Future<BackupImportPayload?> pickImportData({String? dialogTitle}) async {
     if (state) {
       throw StateError('Import already in progress');
     }
@@ -33,7 +35,9 @@ class SettingsViewModel extends Notifier<bool> {
     state = true;
 
     try {
-      return ref.read(dataImportServiceProvider).pickBackupFile();
+      return ref
+          .read(dataImportServiceProvider)
+          .pickBackupFile(dialogTitle: dialogTitle);
     } finally {
       state = false;
     }

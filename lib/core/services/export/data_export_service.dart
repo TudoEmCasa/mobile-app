@@ -44,7 +44,7 @@ class DataExportService {
     SaveFileCallback? saveFile,
   }) : _saveFile = saveFile ?? _defaultSaveFile;
 
-  Future<String?> exportData() async {
+  Future<String?> exportData({String? dialogTitle}) async {
     try {
       final categories = await _categoryRepository.getCategories();
       final productTypes = await _productTypeRepository.getProductTypes();
@@ -66,7 +66,7 @@ class DataExportService {
       final exportBytes = utf8.encode(prettyJson);
 
       return _saveFile(
-        dialogTitle: 'Export data backup',
+        dialogTitle: dialogTitle ?? 'Export data backup',
         fileName: _buildExportFileName(),
         bytes: Uint8List.fromList(exportBytes),
       );

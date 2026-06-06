@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:tudo_em_casa/l10n/localization_extension.dart';
 
 class EmptyUnitsWidget extends StatelessWidget {
   final VoidCallback onCreatePressed;
@@ -13,10 +14,13 @@ class EmptyUnitsWidget extends StatelessWidget {
         children: [
           Icon(Icons.inbox_outlined, size: 64, color: Colors.grey.shade400),
           const SizedBox(height: 16),
-          Text('No units yet', style: Theme.of(context).textTheme.titleLarge),
+          Text(
+            context.l10n.text('noUnitsYet'),
+            style: Theme.of(context).textTheme.titleLarge,
+          ),
           const SizedBox(height: 8),
           Text(
-            'Create a unit to get started',
+            context.l10n.text('createUnitEmptyMessage'),
             style: Theme.of(
               context,
             ).textTheme.bodyMedium?.copyWith(color: Colors.grey.shade600),
@@ -25,7 +29,7 @@ class EmptyUnitsWidget extends StatelessWidget {
           ElevatedButton.icon(
             onPressed: onCreatePressed,
             icon: const Icon(Icons.add),
-            label: const Text('Create Unit'),
+            label: Text(context.l10n.text('createUnit')),
           ),
         ],
       ),

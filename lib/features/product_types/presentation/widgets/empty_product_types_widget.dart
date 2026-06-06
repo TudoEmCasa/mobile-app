@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:tudo_em_casa/l10n/localization_extension.dart';
 
 class EmptyProductTypesWidget extends StatelessWidget {
   final VoidCallback onCreatePressed;
@@ -14,12 +15,12 @@ class EmptyProductTypesWidget extends StatelessWidget {
           Icon(Icons.category_outlined, size: 64, color: Colors.grey.shade400),
           const SizedBox(height: 16),
           Text(
-            'No product types yet',
+            context.l10n.text('noProductTypesYet'),
             style: Theme.of(context).textTheme.titleLarge,
           ),
           const SizedBox(height: 8),
           Text(
-            'Create a product type to get started',
+            context.l10n.text('createProductTypeEmptyMessage'),
             style: Theme.of(
               context,
             ).textTheme.bodyMedium?.copyWith(color: Colors.grey.shade600),
@@ -28,7 +29,7 @@ class EmptyProductTypesWidget extends StatelessWidget {
           ElevatedButton.icon(
             onPressed: onCreatePressed,
             icon: const Icon(Icons.add),
-            label: const Text('Create Product Type'),
+            label: Text(context.l10n.text('createProductType')),
           ),
         ],
       ),
